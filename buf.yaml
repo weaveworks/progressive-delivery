@@ -1,0 +1,10 @@
+version: v1
+name: buf.build/weaveworks/pd
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/grpc-ecosystem/grpc-gateway
+lint:
+  except:
+    # allow the proto file to be in a non-package directory structure.
+    - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_SAME_DIRECTORY
