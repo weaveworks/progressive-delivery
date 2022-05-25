@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option go_package = "github.com/weaveworks/progressive-delivery/api";
+
+message Pagination {
+    int32 page_size = 1;
+    string page_token = 2;
+}
+
+message ListError {
+    string cluster_name = 1;
+    string namespace = 2;
+    string message = 3;
+}
+
+message Canary {
+  string name = 1;
+  string cluster_name = 2;
+  string provider = 3;
+  CanaryTargetReference target_reference = 4;
+  CanaryTargetDeployment target_deployment = 5;
+  CanaryStatus status = 6;
+}
+
+message CanaryTargetReference {
+  string kind = 1;
+  string name = 2;
+}
+
+message CanaryStatus {
+  string phase = 1;
+  int32 failed_checks = 2;
+  int32 canary_weight = 3;
+  int32 iterations = 4;
+  string lastTransition_time = 5;
+  repeated CanaryCondition conditions = 6;
+}
+
+message CanaryCondition {
+  string type = 1;
+  string status = 2;
+  string last_update_time = 3;
+  string last_transition_time = 4;
+  string reason = 5;
+  string message = 6;
+}
+
+message CanaryTargetDeployment {
+  string uid = 1;
+  string resource_version = 2;
+}

@@ -28,5 +28,36 @@ jobs:
       - uses: actions/setup-go@v3
         with:
           go-version: ${{ matrix.go-version }}
+      - run: make dependencies
       - run: go mod download
       - run: make test
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      GO_CACHE_NAME: cache-go-modules
+    steps:
+      - id: go-cache-paths
+        run: |
+          echo "::set-output name=go-build::$(go env GOCACHE)"
+          echo "::set-output name=go-mod::$(go env GOMODCACHE)"
+      - name: echo ref
+        run: |
+          echo "${{ github.ref }}"
+      - name: Install Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.18.x
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Go Build Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ${{ steps.go-cache-paths.outputs.go-build }}
+            ${{ steps.go-cache-paths.outputs.go-mod }}
+          key: ${{ runner.os }}-${{ github.job }}-${{ env.GO_CACHE_NAME }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ github.job }}-${{ env.GO_CACHE_NAME }}-
+      - name: Lint
+        run: |
+          make lint
