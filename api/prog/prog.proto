@@ -12,6 +12,29 @@ service ProgressiveDeliveryService {
             get : "/v1/version"
         };
     }
+
+    // Gate receives flagger webhook calls
+    rpc Gate(GateRequest) returns (GateResponse) {
+        option (google.api.http) = {
+            post : "/v1/canaries/gate"
+            body : "*"
+        };
+    }
+
+    // GateList list all gates
+    rpc GateList(GateListRequest) returns (GateListResponse) {
+        option (google.api.http) = {
+            get : "/v1/canaries/gates"
+        };
+    }
+
+    // GateProceed allows a gate to proceed
+    rpc GateProceed(GateProceedRequest) returns (GateListResponse) {
+        option (google.api.http) = {
+            post : "/v1/canaries/gate/proceed"
+            body : "*"
+        };
+    }
 }
 
 message GetVersionRequest {}
@@ -19,3 +42,31 @@ message GetVersionRequest {}
 message GetVersionResponse {
     string version    = 1;
 }
+
+message Gate {
+    string name = 1;
+    string namespace = 2;
+    string phase = 3;
+    map<string, string> metadata = 4;
+    string hook_type = 5;
+}
+
+
+message GateRequest {
+    string name = 1;
+    string namespace = 2;
+    string phase = 3;
+    map<string, string> metadata = 4;
+    string hook_type = 5;
+}
+message GateResponse {}
+
+message GateListRequest {}
+message GateListResponse {
+    repeated Gate gates = 1;
+}
+
+message GateProceedRequest {
+    string name = 1;
+}
+message GateProceedResponse {}

@@ -19,6 +19,12 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ProgressiveDeliveryServiceClient interface {
 	GetVersion(ctx context.Context, in *GetVersionRequest, opts ...grpc.CallOption) (*GetVersionResponse, error)
+	// Gate receives flagger webhook calls
+	Gate(ctx context.Context, in *GateRequest, opts ...grpc.CallOption) (*GateResponse, error)
+	// GateList list all gates
+	GateList(ctx context.Context, in *GateListRequest, opts ...grpc.CallOption) (*GateListResponse, error)
+	// GateProceed allows a gate to proceed
+	GateProceed(ctx context.Context, in *GateProceedRequest, opts ...grpc.CallOption) (*GateListResponse, error)
 }
 
 type progressiveDeliveryServiceClient struct {
@@ -38,11 +44,44 @@ func (c *progressiveDeliveryServiceClient) GetVersion(ctx context.Context, in *G
 	return out, nil
 }
 
+func (c *progressiveDeliveryServiceClient) Gate(ctx context.Context, in *GateRequest, opts ...grpc.CallOption) (*GateResponse, error) {
+	out := new(GateResponse)
+	err := c.cc.Invoke(ctx, "/ProgressiveDeliveryService/Gate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *progressiveDeliveryServiceClient) GateList(ctx context.Context, in *GateListRequest, opts ...grpc.CallOption) (*GateListResponse, error) {
+	out := new(GateListResponse)
+	err := c.cc.Invoke(ctx, "/ProgressiveDeliveryService/GateList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *progressiveDeliveryServiceClient) GateProceed(ctx context.Context, in *GateProceedRequest, opts ...grpc.CallOption) (*GateListResponse, error) {
+	out := new(GateListResponse)
+	err := c.cc.Invoke(ctx, "/ProgressiveDeliveryService/GateProceed", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProgressiveDeliveryServiceServer is the server API for ProgressiveDeliveryService service.
 // All implementations must embed UnimplementedProgressiveDeliveryServiceServer
 // for forward compatibility
 type ProgressiveDeliveryServiceServer interface {
 	GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error)
+	// Gate receives flagger webhook calls
+	Gate(context.Context, *GateRequest) (*GateResponse, error)
+	// GateList list all gates
+	GateList(context.Context, *GateListRequest) (*GateListResponse, error)
+	// GateProceed allows a gate to proceed
+	GateProceed(context.Context, *GateProceedRequest) (*GateListResponse, error)
 	mustEmbedUnimplementedProgressiveDeliveryServiceServer()
 }
 
@@ -52,6 +91,15 @@ type UnimplementedProgressiveDeliveryServiceServer struct {
 
 func (UnimplementedProgressiveDeliveryServiceServer) GetVersion(context.Context, *GetVersionRequest) (*GetVersionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetVersion not implemented")
+}
+func (UnimplementedProgressiveDeliveryServiceServer) Gate(context.Context, *GateRequest) (*GateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Gate not implemented")
+}
+func (UnimplementedProgressiveDeliveryServiceServer) GateList(context.Context, *GateListRequest) (*GateListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GateList not implemented")
+}
+func (UnimplementedProgressiveDeliveryServiceServer) GateProceed(context.Context, *GateProceedRequest) (*GateListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GateProceed not implemented")
 }
 func (UnimplementedProgressiveDeliveryServiceServer) mustEmbedUnimplementedProgressiveDeliveryServiceServer() {
 }
@@ -85,6 +133,60 @@ func _ProgressiveDeliveryService_GetVersion_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProgressiveDeliveryService_Gate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProgressiveDeliveryServiceServer).Gate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ProgressiveDeliveryService/Gate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProgressiveDeliveryServiceServer).Gate(ctx, req.(*GateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProgressiveDeliveryService_GateList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GateListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProgressiveDeliveryServiceServer).GateList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ProgressiveDeliveryService/GateList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProgressiveDeliveryServiceServer).GateList(ctx, req.(*GateListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProgressiveDeliveryService_GateProceed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GateProceedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProgressiveDeliveryServiceServer).GateProceed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ProgressiveDeliveryService/GateProceed",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProgressiveDeliveryServiceServer).GateProceed(ctx, req.(*GateProceedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProgressiveDeliveryService_ServiceDesc is the grpc.ServiceDesc for ProgressiveDeliveryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -95,6 +197,18 @@ var ProgressiveDeliveryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetVersion",
 			Handler:    _ProgressiveDeliveryService_GetVersion_Handler,
+		},
+		{
+			MethodName: "Gate",
+			Handler:    _ProgressiveDeliveryService_Gate_Handler,
+		},
+		{
+			MethodName: "GateList",
+			Handler:    _ProgressiveDeliveryService_GateList_Handler,
+		},
+		{
+			MethodName: "GateProceed",
+			Handler:    _ProgressiveDeliveryService_GateProceed_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

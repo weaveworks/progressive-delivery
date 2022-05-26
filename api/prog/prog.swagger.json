@@ -16,6 +16,95 @@
     "application/json"
   ],
   "paths": {
+    "/v1/canaries/gate": {
+      "post": {
+        "summary": "Gate receives flagger webhook calls",
+        "operationId": "ProgressiveDeliveryService_Gate",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GateRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
+    "/v1/canaries/gate/proceed": {
+      "post": {
+        "summary": "GateProceed allows a gate to proceed",
+        "operationId": "ProgressiveDeliveryService_GateProceed",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GateListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GateProceedRequest"
+            }
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
+    "/v1/canaries/gates": {
+      "get": {
+        "summary": "GateList list all gates",
+        "operationId": "ProgressiveDeliveryService_GateList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GateListResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
     "/v1/version": {
       "get": {
         "operationId": "ProgressiveDeliveryService_GetVersion",
@@ -40,6 +129,74 @@
     }
   },
   "definitions": {
+    "Gate": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "hookType": {
+          "type": "string"
+        }
+      }
+    },
+    "GateListResponse": {
+      "type": "object",
+      "properties": {
+        "gates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Gate"
+          }
+        }
+      }
+    },
+    "GateProceedRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "GateRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "hookType": {
+          "type": "string"
+        }
+      }
+    },
+    "GateResponse": {
+      "type": "object"
+    },
     "GetVersionResponse": {
       "type": "object",
       "properties": {
