@@ -5,6 +5,7 @@ option go_package = "github.com/weaveworks/progressive-delivery/api";
 import "google/api/annotations.proto";
 import "protoc-gen-openapiv2/options/annotations.proto";
 
+import "api/prog/types.proto";
 
 service ProgressiveDeliveryService {
     rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {
@@ -12,10 +13,30 @@ service ProgressiveDeliveryService {
             get : "/v1/version"
         };
     }
+
+    /**
+    * ListCanaries returns with a list of Canary objects.
+    */
+    rpc ListCanaries(ListCanariesRequest) returns (ListCanariesResponse) {
+        option (google.api.http) = {
+            get : "/v1/canaries",
+        };
+    }
 }
 
 message GetVersionRequest {}
 
 message GetVersionResponse {
-    string version    = 1;
+    string version = 1;
+}
+
+message ListCanariesRequest {
+    string cluster_name = 1;
+    Pagination pagination = 2;
+}
+
+message ListCanariesResponse {
+    repeated Canary canaries = 1;
+    string nextPage_token = 2;
+    repeated ListError errors = 3;
 }

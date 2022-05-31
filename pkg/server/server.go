@@ -5,11 +5,18 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
+	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
+	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"github.com/weaveworks/progressive-delivery/pkg/services/version"
+	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 )
 
 func Hydrate(ctx context.Context, mux *runtime.ServeMux, opts ServerOpts) error {
-	pds := NewProgressiveDeliveryServer(opts)
+	pds, err := NewProgressiveDeliveryServer(opts)
+	if err != nil {
+		return err
+	}
+
 	return pb.RegisterProgressiveDeliveryServiceHandlerServer(ctx, mux, pds)
 }
 
@@ -17,14 +24,36 @@ type pdServer struct {
 	pb.UnimplementedProgressiveDeliveryServiceServer
 
 	version version.Fetcher
+	crd     crd.Fetcher
+	flagger flagger.Fetcher
 }
 
-type ServerOpts struct{}
+type ServerOpts struct {
+	ClientFactory clustersmngr.ClientsFactory
+	CRDService    crd.Fetcher
+}
 
-func NewProgressiveDeliveryServer(opts ServerOpts) pb.ProgressiveDeliveryServiceServer {
-	return &pdServer{
-		version: version.NewFetcher(),
+func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServiceServer, error) {
+	ctx := context.Background()
+
+	clusterClient, err := opts.ClientFactory.GetServerClient(ctx)
+	if err != nil {
+		return nil, err
 	}
+
+	versionService := version.NewFetcher()
+
+	if opts.CRDService == nil {
+		opts.CRDService = crd.NewFetcher(ctx, clusterClient)
+	}
+
+	flaggerService := flagger.NewFetcher(opts.CRDService)
+
+	return &pdServer{
+		version: versionService,
+		crd:     opts.CRDService,
+		flagger: flaggerService,
+	}, nil
 }
 
 func (pd *pdServer) GetVersion(ctx context.Context, msg *pb.GetVersionRequest) (*pb.GetVersionResponse, error) {

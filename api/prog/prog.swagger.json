@@ -16,6 +16,50 @@
     "application/json"
   ],
   "paths": {
+    "/v1/canaries": {
+      "get": {
+        "summary": "ListCanaries returns with a list of Canary objects.",
+        "operationId": "ProgressiveDeliveryService_ListCanaries",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ListCanariesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pagination.pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
     "/v1/version": {
       "get": {
         "operationId": "ProgressiveDeliveryService_GetVersion",
@@ -40,10 +84,153 @@
     }
   },
   "definitions": {
+    "Canary": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "clusterName": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "targetReference": {
+          "$ref": "#/definitions/CanaryTargetReference"
+        },
+        "targetDeployment": {
+          "$ref": "#/definitions/CanaryTargetDeployment"
+        },
+        "status": {
+          "$ref": "#/definitions/CanaryStatus"
+        }
+      }
+    },
+    "CanaryCondition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "lastUpdateTime": {
+          "type": "string"
+        },
+        "lastTransitionTime": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "CanaryStatus": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string"
+        },
+        "failedChecks": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "canaryWeight": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "iterations": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "lastTransitionTime": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CanaryCondition"
+          }
+        }
+      }
+    },
+    "CanaryTargetDeployment": {
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string"
+        },
+        "resourceVersion": {
+          "type": "string"
+        }
+      }
+    },
+    "CanaryTargetReference": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
     "GetVersionResponse": {
       "type": "object",
       "properties": {
         "version": {
+          "type": "string"
+        }
+      }
+    },
+    "ListCanariesResponse": {
+      "type": "object",
+      "properties": {
+        "canaries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Canary"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListError"
+          }
+        }
+      }
+    },
+    "ListError": {
+      "type": "object",
+      "properties": {
+        "clusterName": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "Pagination": {
+      "type": "object",
+      "properties": {
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageToken": {
           "type": "string"
         }
       }

@@ -5,22 +5,27 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/onsi/gomega"
+	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
-	"github.com/weaveworks/progressive-delivery/pkg/server"
 )
 
 func TestGetVersion(t *testing.T) {
-	mux := runtime.NewServeMux()
-	err := server.Hydrate(context.Background(), mux, server.ServerOpts{})
-	if err != nil {
-		t.Error(err)
-	}
+	g := gomega.NewGomegaWithT(t)
+	ctx := context.Background()
+	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
-	ts := httptest.NewServer(mux)
+	response, err := c.GetVersion(ctx, &pb.GetVersionRequest{})
+	g.Expect(err).NotTo(gomega.HaveOccurred())
+
+	g.Expect(response.GetVersion()).To(gomega.Equal("v0.0.0"), "version should have been v0.0.0")
+}
+
+func TestHydrate(t *testing.T) {
+	ts := pdtesting.MakeHTTPServer(t, k8sEnv)
+
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL + "/v1/version")
