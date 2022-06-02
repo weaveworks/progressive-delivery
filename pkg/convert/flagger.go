@@ -24,6 +24,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 
 	return &pb.Canary{
 		Name:        canary.GetName(),
+		Namespace:   canary.GetNamespace(),
 		ClusterName: clusterName,
 		Provider:    canary.Spec.Provider,
 		TargetReference: &pb.CanaryTargetReference{
