@@ -14,12 +14,13 @@ message ListError {
 }
 
 message Canary {
-  string name = 1;
-  string cluster_name = 2;
-  string provider = 3;
-  CanaryTargetReference target_reference = 4;
-  CanaryTargetDeployment target_deployment = 5;
-  CanaryStatus status = 6;
+  string namespace = 1;
+  string name = 2;
+  string cluster_name = 3;
+  string provider = 4;
+  CanaryTargetReference target_reference = 5;
+  CanaryTargetDeployment target_deployment = 6;
+  CanaryStatus status = 7;
 }
 
 message CanaryTargetReference {

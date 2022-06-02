@@ -87,6 +87,9 @@
     "Canary": {
       "type": "object",
       "properties": {
+        "namespace": {
+          "type": "string"
+        },
         "name": {
           "type": "string"
         },
