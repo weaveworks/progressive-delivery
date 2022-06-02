@@ -49,3 +49,9 @@ message CanaryTargetDeployment {
   string uid = 1;
   string resource_version = 2;
 }
+
+message Automation {
+  string kind = 1;
+  string name = 2;
+  string namespace = 3;
+}

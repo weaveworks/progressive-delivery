@@ -7,6 +7,14 @@ import (
 	"github.com/weaveworks/progressive-delivery/pkg/convert"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
+	v1 "k8s.io/api/apps/v1"
+)
+
+const (
+	LabelKustomizeName        = "kustomize.toolkit.fluxcd.io/name"
+	LabelKustomizeNamespace   = "kustomize.toolkit.fluxcd.io/namespace"
+	LabelHelmReleaseName      = "helm.toolkit.fluxcd.io/name"
+	LabelHelmReleaseNamespace = "helm.toolkit.fluxcd.io/namespace"
 )
 
 func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesRequest) (*pb.ListCanariesResponse, error) {
@@ -49,4 +57,52 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 	}
 
 	return response, nil
+}
+
+func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*pb.GetCanaryResponse, error) {
+	clusterClient := clustersmngr.ClientFromCtx(ctx)
+
+	canary, err := pd.flagger.GetCanary(ctx, clusterClient, flagger.GetCanaryOptions{
+		Name:        msg.Name,
+		Namespace:   msg.Namespace,
+		ClusterName: msg.ClusterName,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	deployment, err := pd.flagger.FetchTargetRef(ctx, msg.ClusterName, clusterClient, canary)
+	if err != nil {
+		return nil, err
+	}
+
+	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment)
+
+	response := &pb.GetCanaryResponse{
+		Canary:     pbObject,
+		Automation: getAutomation(deployment),
+	}
+
+	return response, nil
+}
+
+func getAutomation(dpl v1.Deployment) *pb.Automation {
+	for k, v := range dpl.Labels {
+		switch k {
+		case LabelKustomizeName:
+			return &pb.Automation{
+				Kind:      "Kustomization",
+				Name:      v,
+				Namespace: dpl.Labels[LabelKustomizeNamespace],
+			}
+		case LabelHelmReleaseName:
+			return &pb.Automation{
+				Kind:      "HelmRelease",
+				Name:      v,
+				Namespace: dpl.Labels[LabelHelmReleaseNamespace],
+			}
+		}
+	}
+
+	return nil
 }

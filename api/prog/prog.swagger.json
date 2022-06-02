@@ -60,6 +60,49 @@
         ]
       }
     },
+    "/v1/canaries/{name}": {
+      "get": {
+        "summary": "GetCanary returns a Canary object.",
+        "operationId": "ProgressiveDeliveryService_GetCanary",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GetCanaryResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
     "/v1/version": {
       "get": {
         "operationId": "ProgressiveDeliveryService_GetVersion",
@@ -84,6 +127,20 @@
     }
   },
   "definitions": {
+    "Automation": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        }
+      }
+    },
     "Canary": {
       "type": "object",
       "properties": {
@@ -178,6 +235,17 @@
         },
         "name": {
           "type": "string"
+        }
+      }
+    },
+    "GetCanaryResponse": {
+      "type": "object",
+      "properties": {
+        "canary": {
+          "$ref": "#/definitions/Canary"
+        },
+        "automation": {
+          "$ref": "#/definitions/Automation"
         }
       }
     },

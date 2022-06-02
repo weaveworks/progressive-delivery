@@ -10,7 +10,6 @@ require (
 	github.com/fluxcd/kustomize-controller/api v0.24.4
 	github.com/fluxcd/source-controller/api v0.24.3
 	github.com/go-logr/logr v1.2.2
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.2
 	github.com/onsi/gomega v1.18.1
 	github.com/weaveworks/weave-gitops v0.8.1-rc.5
