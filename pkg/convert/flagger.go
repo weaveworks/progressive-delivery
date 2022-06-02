@@ -22,6 +22,11 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		})
 	}
 
+	fluxLabels := &pb.FluxLabels{
+		KustomizeNamespace: deployment.Labels["kustomize.toolkit.fluxcd.io/namespace"],
+		KustomizeName:      deployment.Labels["kustomize.toolkit.fluxcd.io/name"],
+	}
+
 	return &pb.Canary{
 		Name:        canary.GetName(),
 		Namespace:   canary.GetNamespace(),
@@ -34,6 +39,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		TargetDeployment: &pb.CanaryTargetDeployment{
 			Uid:             string(deployment.GetObjectMeta().GetUID()),
 			ResourceVersion: deployment.GetObjectMeta().GetResourceVersion(),
+			FluxLabels:      fluxLabels,
 		},
 		Status: &pb.CanaryStatus{
 			Phase:              string(canary.Status.Phase),

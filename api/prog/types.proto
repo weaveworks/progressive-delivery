@@ -49,4 +49,10 @@ message CanaryCondition {
 message CanaryTargetDeployment {
   string uid = 1;
   string resource_version = 2;
+  FluxLabels flux_labels = 3;
+}
+
+message FluxLabels {
+  string kustomize_namespace = 1;
+  string kustomize_name = 2;
 }

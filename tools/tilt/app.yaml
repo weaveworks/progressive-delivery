@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: progressive-delivery-server
+  namespace: flux-system
+  labels:
+    app: progressive-delivery-server
+spec:
+  selector:
+    matchLabels:
+      app: progressive-delivery-server
+  template:
+    metadata:
+      labels:
+        app: progressive-delivery-server
+    spec:
+      serviceAccountName: progressive-delivery-sa
+      containers:
+      - name: progressive-delivery-server
+        image: localhost:5001/weaveworks/progressive-delivery
+        ports:
+        - containerPort: 9001
