@@ -21,32 +21,11 @@ func TestListCanaries(t *testing.T) {
 	})
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 
-	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	g.Expect(response.GetCanaries()).To(gomega.BeEmpty(), "should not return any canary objects")
-	g.Expect(response.GetErrors()).ToNot(gomega.BeEmpty(), "should return with errors")
-
-	newCRD(ctx, k, g, crdInfo{
-		Group:    "flagger.app",
-		Plural:   "canaries",
-		Singular: "canary",
-		Kind:     "Canary",
-		ListKind: "CanaryList",
-		Scope:    "Namespaced",
-	})
-
-	response, err = c.ListCanaries(ctx, &api.ListCanariesRequest{})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	g.Expect(response.GetCanaries()).To(gomega.BeEmpty(), "should not return any canary objects")
-	g.Expect(response.GetErrors()).To(gomega.BeEmpty(), "should not return with errors")
-
 	ns := newNamespace(ctx, k, g)
 
 	newCanary(ctx, k, g, "example", ns.Name)
 
-	response, err = c.ListCanaries(ctx, &api.ListCanariesRequest{})
+	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
 	g.Expect(err).NotTo(gomega.HaveOccurred())
 
 	g.Expect(response.GetCanaries()).To(gomega.HaveLen(1), "should return one canary object")
