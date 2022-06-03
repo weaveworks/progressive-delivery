@@ -14,4 +14,4 @@ k8s_yaml('tools/tilt/service-account.yaml')
 k8s_yaml('tools/tilt/role.yaml')
 k8s_yaml('tools/tilt/app.yaml')
 
-k8s_resource('progressive-delivery-server', port_forwards=9001)
+k8s_resource('progressive-delivery-server', port_forwards=9002)

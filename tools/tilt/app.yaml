@@ -19,4 +19,4 @@ spec:
       - name: progressive-delivery-server
         image: localhost:5001/weaveworks/progressive-delivery
         ports:
-        - containerPort: 9001
+        - containerPort: 9002

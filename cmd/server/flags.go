@@ -8,7 +8,7 @@ const (
 	hostFlag        = "host"
 	portFlag        = "port"
 	defaultHTTPHost = "0.0.0.0"
-	defaultHTTPPort = "9001"
+	defaultHTTPPort = "9002"
 )
 
 type WithFlagsFunc func() []cli.Flag

@@ -15,8 +15,10 @@ Use ea gRPC client to interact with the API, for example:
 * [gRPCurl](https://github.com/fullstorydev/grpcurl) can be used from command
     line.
 
+```bash
+❯ grpcurl -plaintext localhost:9002 ProgressiveDeliveryService.ListCanaries
+```
 ```json
-❯ grpcurl -plaintext localhost:9001 ProgressiveDeliveryService.ListCanaries
 {
   "canaries": [
     {
