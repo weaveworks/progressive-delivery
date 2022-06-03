@@ -24,7 +24,9 @@ func CreateTestEnv() (*testutils.K8sTestEnv, error) {
 	os.Setenv("KUBEBUILDER_ASSETS", envTestPath)
 
 	var err error
-	k8sEnv, err := testutils.StartK8sTestEnvironment([]string{})
+	k8sEnv, err := testutils.StartK8sTestEnvironment([]string{
+		"../../tools/testcrds",
+	})
 
 	if err != nil {
 		return nil, err

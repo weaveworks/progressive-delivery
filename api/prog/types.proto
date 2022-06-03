@@ -56,3 +56,9 @@ message FluxLabels {
   string kustomize_namespace = 1;
   string kustomize_name = 2;
 }
+
+message Automation {
+  string kind = 1;
+  string name = 2;
+  string namespace = 3;
+}

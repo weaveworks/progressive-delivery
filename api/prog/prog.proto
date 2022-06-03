@@ -22,6 +22,15 @@ service ProgressiveDeliveryService {
             get : "/v1/canaries",
         };
     }
+
+    /**
+    * GetCanary returns a Canary object.
+    */
+    rpc GetCanary(GetCanaryRequest) returns (GetCanaryResponse) {
+        option (google.api.http) = {
+            get : "/v1/canaries/{name}",
+        };
+    }
 }
 
 message GetVersionRequest {}
@@ -39,4 +48,15 @@ message ListCanariesResponse {
     repeated Canary canaries = 1;
     string nextPage_token = 2;
     repeated ListError errors = 3;
+}
+
+message GetCanaryRequest {
+    string name = 1;
+    string namespace = 2;
+    string cluster_name = 3;
+}
+
+message GetCanaryResponse {
+    Canary canary = 1;
+    Automation automation = 2;
 }

@@ -3,6 +3,7 @@ package flagger
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
@@ -17,6 +18,7 @@ const (
 
 type Fetcher interface {
 	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
+	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
 	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
 }
 
@@ -34,6 +36,12 @@ type ListCanaryDeploymentsOptions struct {
 	Namespace string
 	PageSize  int32
 	PageToken string
+}
+
+type GetCanaryOptions struct {
+	Name        string
+	Namespace   string
+	ClusterName string
 }
 
 func (service *defaultFetcher) ListCanaryDeployments(
@@ -98,6 +106,24 @@ func (service *defaultFetcher) ListCanaryDeployments(
 	return results, clist.GetContinue(), respErrors, nil
 }
 
+func (service *defaultFetcher) GetCanary(
+	ctx context.Context,
+	clustersClient clustersmngr.Client,
+	opts GetCanaryOptions,
+) (*v1beta1.Canary, error) {
+	k := &v1beta1.Canary{}
+	key := client.ObjectKey{
+		Name:      opts.Name,
+		Namespace: opts.Namespace,
+	}
+
+	if err := clustersClient.Get(ctx, opts.ClusterName, key, k); err != nil {
+		return nil, fmt.Errorf("failed getting canary: name=%s namespace=%s cluster=%s err=%w", opts.Name, opts.Namespace, opts.ClusterName, err)
+	}
+
+	return k, nil
+}
+
 func (service *defaultFetcher) FetchTargetRef(
 	ctx context.Context,
 	clusterName string,
@@ -114,5 +140,4 @@ func (service *defaultFetcher) FetchTargetRef(
 	err := clusterClient.Get(ctx, clusterName, key, &deployment)
 
 	return deployment, err
-
 }
