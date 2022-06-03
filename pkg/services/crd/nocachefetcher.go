@@ -2,6 +2,7 @@ package crd
 
 import (
 	"context"
+	"log"
 	"sync"
 
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
@@ -34,7 +35,7 @@ func (s *noCacheFetcher) UpdateCRDList() {
 
 		err := client.List(ctx, crdList)
 		if err != nil {
-			// Handle error, or log at least.
+			log.Printf("unable to list crds: %s", err)
 			continue
 		}
 

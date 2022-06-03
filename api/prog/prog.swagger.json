@@ -227,6 +227,9 @@
         },
         "resourceVersion": {
           "type": "string"
+        },
+        "fluxLabels": {
+          "$ref": "#/definitions/FluxLabels"
         }
       }
     },
@@ -237,6 +240,17 @@
           "type": "string"
         },
         "name": {
+          "type": "string"
+        }
+      }
+    },
+    "FluxLabels": {
+      "type": "object",
+      "properties": {
+        "kustomizeNamespace": {
+          "type": "string"
+        },
+        "kustomizeName": {
           "type": "string"
         }
       }

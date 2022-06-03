@@ -12,6 +12,7 @@ require (
 	github.com/go-logr/logr v1.2.2
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.10.2
 	github.com/onsi/gomega v1.18.1
+	github.com/urfave/cli/v2 v2.8.1
 	github.com/weaveworks/weave-gitops v0.8.1-rc.5
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
 	google.golang.org/grpc v1.46.2
@@ -47,6 +48,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/getkin/kin-openapi v0.94.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
+	github.com/go-logr/zapr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
@@ -92,6 +94,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
