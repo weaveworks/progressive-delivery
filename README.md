@@ -1,6 +1,10 @@
 # progressive-delivery
 This repository contains the progressive delivery API handlers that Weave GitOps Enterprise serves.
 
+## Local development environment
+
+To install all dependencies use `make dependencies`.
+
 ## Start dev server
 
 Use Tilt to deploy the dev-server on the cluster:
