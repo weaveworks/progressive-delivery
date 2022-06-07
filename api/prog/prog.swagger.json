@@ -103,6 +103,29 @@
         ]
       }
     },
+    "/v1/crd/flagger": {
+      "get": {
+        "summary": "IsFlaggerAvailable returns with a hashmap where the keys are the names of\nthe clusters, and the value is a boolean indicating whether Flagger is\ninstalled or not on that cluster.",
+        "operationId": "ProgressiveDeliveryService_IsFlaggerAvailable",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/IsFlaggerAvailableResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
     "/v1/version": {
       "get": {
         "operationId": "ProgressiveDeliveryService_GetVersion",
@@ -271,6 +294,17 @@
       "properties": {
         "version": {
           "type": "string"
+        }
+      }
+    },
+    "IsFlaggerAvailableResponse": {
+      "type": "object",
+      "properties": {
+        "clusters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
         }
       }
     },

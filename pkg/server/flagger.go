@@ -5,6 +5,7 @@ import (
 
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/convert"
+	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	v1 "k8s.io/api/apps/v1"
@@ -16,6 +17,12 @@ const (
 	LabelHelmReleaseName      = "helm.toolkit.fluxcd.io/name"
 	LabelHelmReleaseNamespace = "helm.toolkit.fluxcd.io/namespace"
 )
+
+func (pd *pdServer) IsFlaggerAvailable(ctx context.Context, msg *pb.IsFlaggerAvailableRequest) (*pb.IsFlaggerAvailableResponse, error) {
+	return &pb.IsFlaggerAvailableResponse{
+		Clusters: pd.crd.IsAvailableOnClusters(crd.FlaggerCRDName),
+	}, nil
+}
 
 func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesRequest) (*pb.ListCanariesResponse, error) {
 	clusterClient := clustersmngr.ClientFromCtx(ctx)
@@ -41,7 +48,6 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 			Namespace:   "",
 			Message:     err.Error(),
 		})
-
 	}
 
 	for clusterName, list := range results {

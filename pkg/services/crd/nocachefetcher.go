@@ -57,3 +57,25 @@ func (s *noCacheFetcher) IsAvailable(clusterName, name string) bool {
 
 	return false
 }
+
+func (s *noCacheFetcher) IsAvailableOnClusters(name string) map[string]bool {
+	s.UpdateCRDList()
+
+	s.Lock()
+	defer s.Unlock()
+
+	result := map[string]bool{}
+
+	for clusterName, crds := range s.crds {
+		result[clusterName] = false
+
+		for _, crd := range crds {
+			if crd.Name == name {
+				result[clusterName] = true
+				break
+			}
+		}
+	}
+
+	return result
+}

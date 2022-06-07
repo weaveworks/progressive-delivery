@@ -31,6 +31,17 @@ service ProgressiveDeliveryService {
             get : "/v1/canaries/{name}",
         };
     }
+
+    /**
+    * IsFlaggerAvailable returns with a hashmap where the keys are the names of
+    * the clusters, and the value is a boolean indicating whether Flagger is
+    * installed or not on that cluster.
+    */
+    rpc IsFlaggerAvailable(IsFlaggerAvailableRequest) returns (IsFlaggerAvailableResponse) {
+        option (google.api.http) = {
+            get : "/v1/crd/flagger",
+        };
+    }
 }
 
 message GetVersionRequest {}
@@ -59,4 +70,11 @@ message GetCanaryRequest {
 message GetCanaryResponse {
     Canary canary = 1;
     Automation automation = 2;
+}
+
+message IsFlaggerAvailableRequest {
+}
+
+message IsFlaggerAvailableResponse {
+  map<string,bool> clusters = 1;
 }

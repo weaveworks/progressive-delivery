@@ -12,10 +12,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const (
-	flaggerCRDName = "canaries.flagger.app"
-)
-
 type Fetcher interface {
 	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
 	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
@@ -80,7 +76,7 @@ func (service *defaultFetcher) ListCanaryDeployments(
 	for clusterName, lists := range clist.Lists() {
 		// The error will be in there from ClusteredListError, adding an extra
 		// error so it's easier to check them on client side.
-		if !service.crdService.IsAvailable(clusterName, flaggerCRDName) {
+		if !service.crdService.IsAvailable(clusterName, crd.FlaggerCRDName) {
 			respErrors = append(
 				respErrors,
 				CanaryListError{
