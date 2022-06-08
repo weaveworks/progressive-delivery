@@ -7,20 +7,19 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 )
 
 func TestGetVersion(t *testing.T) {
-	g := gomega.NewGomegaWithT(t)
 	ctx := context.Background()
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	response, err := c.GetVersion(ctx, &pb.GetVersionRequest{})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.NoError(t, err)
 
-	g.Expect(response.GetVersion()).To(gomega.Equal("v0.0.0"), "version should have been v0.0.0")
+	assert.Equal(t, "v0.0.0", response.GetVersion())
 }
 
 func TestHydrate(t *testing.T) {
@@ -29,25 +28,16 @@ func TestHydrate(t *testing.T) {
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL + "/v1/version")
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 
-	if res.StatusCode != http.StatusOK {
-		t.Error("should have been ok")
-	}
+	assert.Equal(t, http.StatusOK, res.StatusCode, "should have been ok")
 
 	body, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.NoError(t, err)
 
 	v := pb.GetVersionResponse{}
-	if err := json.Unmarshal(body, &v); err != nil {
-		t.Error(err)
-	}
+	err = json.Unmarshal(body, &v)
+	assert.NoError(t, err)
 
-	if v.Version != "v0.0.0" {
-		t.Error("should have been v0.0.0")
-	}
+	assert.Equal(t, "v0.0.0", v.Version)
 }

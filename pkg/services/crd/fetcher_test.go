@@ -5,55 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-func TestFetcher_IsAvailable(t *testing.T) {
-	g := gomega.NewGomegaWithT(t)
-	ctx, cancelFn := context.WithCancel(context.Background())
-
-	defer cancelFn()
-
-	service, err := newService(ctx, k8sEnv)
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
-	})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
-
-	var found bool
-
-	found = service.IsAvailable("Default", "customobjects.example.com")
-	g.Expect(found).
-		To(gomega.BeFalse(), "customobjects crd should not be defined in Default cluster")
-
-	newCRD(ctx, k, g,
-		crdInfo{
-			Singular: "customobject",
-			Group:    "example.com",
-			Plural:   "customobjects",
-			Kind:     "CustomObject",
-		})
-
-	service.UpdateCRDList()
-
-	found = service.IsAvailable("Default", "customobjects.example.com")
-	g.Expect(found).
-		To(gomega.BeTrue(), "customobjects crd should be defined in Default cluster")
-
-	found = service.IsAvailable("Default", "somethingelse.example.com")
-	g.Expect(found).
-		To(gomega.BeFalse(), "somethingelse crd should not be defined in Default Cluster")
-
-	found = service.IsAvailable("Other", "customobjects.example.com")
-	g.Expect(found).
-		To(gomega.BeFalse(), "customobjects crd should not be defined in Other cluster")
-}
 
 type crdInfo struct {
 	Group    string
@@ -64,8 +21,8 @@ type crdInfo struct {
 
 func newCRD(
 	ctx context.Context,
+	t *testing.T,
 	k client.Client,
-	g *gomega.GomegaWithT,
 	info crdInfo,
 ) v1.CustomResourceDefinition {
 
@@ -97,7 +54,46 @@ func newCRD(
 		},
 	}
 
-	g.Expect(k.Create(ctx, &resource)).To(gomega.Succeed())
+	err := k.Create(ctx, &resource)
+	assert.NoError(t, err, "should be able to create crd: %s", resource.GetName())
 
 	return resource
+}
+
+func TestFetcher_IsAvailable(t *testing.T) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	defer cancelFn()
+
+	service, err := newService(ctx, k8sEnv)
+	assert.NoError(t, err)
+
+	k, err := client.New(k8sEnv.Rest, client.Options{
+		Scheme: server.CreateScheme(),
+	})
+	assert.NoError(t, err)
+
+	var found bool
+
+	found = service.IsAvailable("Default", "customobjects.example.com")
+	assert.False(t, found, "customobjects crd should not be defined in Default cluster")
+
+	newCRD(ctx, t, k,
+		crdInfo{
+			Singular: "customobject",
+			Group:    "example.com",
+			Plural:   "customobjects",
+			Kind:     "CustomObject",
+		})
+
+	service.UpdateCRDList()
+
+	found = service.IsAvailable("Default", "customobjects.example.com")
+	assert.True(t, found, "customobjects crd should be defined in Default cluster")
+
+	found = service.IsAvailable("Default", "somethingelse.example.com")
+	assert.False(t, found, "somethingelse crd should not be defined in Default Cluster")
+
+	found = service.IsAvailable("Other", "customobjects.example.com")
+	assert.False(t, found, "customobjects crd should not be defined in Other cluster")
 }

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	api "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
@@ -12,48 +12,46 @@ import (
 )
 
 func TestListCanaries(t *testing.T) {
-	g := gomega.NewGomegaWithT(t)
 	ctx := context.Background()
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
 		Scheme: server.CreateScheme(),
 	})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.NoError(t, err)
 
-	ns := newNamespace(ctx, k, g)
+	ns := newNamespace(ctx, t, k)
 
-	newCanary(ctx, k, g, "example", ns.Name)
+	newCanary(ctx, t, k, "example", ns.Name)
 
 	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.NoError(t, err)
 
-	g.Expect(response.GetCanaries()).To(gomega.HaveLen(1), "should return one canary object")
-	g.Expect(response.GetErrors()).To(gomega.BeEmpty(), "should not return with errors")
+	assert.Len(t, response.GetCanaries(), 1, "should return one canary object")
+	assert.Empty(t, response.GetErrors(), "should not return with errors")
 }
 
 func TestGetCanary(t *testing.T) {
-	g := gomega.NewGomegaWithT(t)
 	ctx := context.Background()
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
 		Scheme: server.CreateScheme(),
 	})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.NoError(t, err)
 
 	appName := "example"
 
-	ns := newNamespace(ctx, k, g)
+	ns := newNamespace(ctx, t, k)
 
-	_ = newDeployment(ctx, k, g, appName, ns.Name)
-	canary := newCanary(ctx, k, g, appName, ns.Name)
+	_ = newDeployment(ctx, t, k, appName, ns.Name)
+	canary := newCanary(ctx, t, k, appName, ns.Name)
 
 	response, err := c.GetCanary(ctx, &api.GetCanaryRequest{ClusterName: "Default", Name: canary.Name, Namespace: canary.Namespace})
-	g.Expect(err).NotTo(gomega.HaveOccurred())
+	assert.NoError(t, err)
 
-	g.Expect(response.GetCanary().Name).To(gomega.Equal(canary.Name))
-
-	g.Expect(response.GetAutomation()).To(gomega.HaveField("Name", appName))
-	g.Expect(response.GetAutomation()).To(gomega.HaveField("Namespace", ns.Name))
+	assert.Equal(t, canary.Name, response.GetCanary().Name)
+	assert.NotNil(t, response.GetAutomation())
+	assert.Equal(t, appName, response.GetAutomation().GetName())
+	assert.Equal(t, ns.Name, response.GetAutomation().GetNamespace())
 }
