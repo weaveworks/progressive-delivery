@@ -2,10 +2,11 @@ package server_test
 
 import (
 	"context"
+	"testing"
 	"time"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
-	"github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -17,8 +18,8 @@ import (
 
 func newCanary(
 	ctx context.Context,
+	t *testing.T,
 	k client.Client,
-	g *gomega.GomegaWithT,
 	name, namespace string,
 ) v1beta1.Canary {
 	resource := v1beta1.Canary{
@@ -69,21 +70,23 @@ func newCanary(
 		},
 	}
 
-	g.Expect(k.Create(ctx, &resource)).To(gomega.Succeed())
+	err := k.Create(ctx, &resource)
+	assert.NoError(t, err, "should be able to create canary: %s", resource.GetName())
 
 	return resource
 }
 
-func newNamespace(ctx context.Context, k client.Client, g *gomega.GomegaWithT) corev1.Namespace {
+func newNamespace(ctx context.Context, t *testing.T, k client.Client) corev1.Namespace {
 	ns := corev1.Namespace{}
 	ns.Name = "kube-test-" + rand.String(5)
 
-	g.Expect(k.Create(ctx, &ns)).To(gomega.Succeed())
+	err := k.Create(ctx, &ns)
+	assert.NoError(t, err, "should be able to create namespace: %s", ns.GetName())
 
 	return ns
 }
 
-func newDeployment(ctx context.Context, k client.Client, g *gomega.GomegaWithT, name string, ns string) *appsv1.Deployment {
+func newDeployment(ctx context.Context, t *testing.T, k client.Client, name string, ns string) *appsv1.Deployment {
 	dpl := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -115,7 +118,8 @@ func newDeployment(ctx context.Context, k client.Client, g *gomega.GomegaWithT, 
 		},
 	}
 
-	g.Expect(k.Create(ctx, dpl)).To(gomega.Succeed())
+	err := k.Create(ctx, dpl)
+	assert.NoError(t, err, "should be able to create Deployment: %s", dpl.GetName())
 
 	return dpl
 }
