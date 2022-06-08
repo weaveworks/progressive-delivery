@@ -50,7 +50,7 @@ func TestGetCanary(t *testing.T) {
 	response, err := c.GetCanary(ctx, &api.GetCanaryRequest{ClusterName: "Default", Name: canary.Name, Namespace: canary.Namespace})
 	assert.NoError(t, err)
 
-	assert.Equal(t, canary.Name, response.GetCanary().Name)
+	assert.Equal(t, canary.Name, response.GetCanary().GetName())
 	assert.NotNil(t, response.GetAutomation())
 	assert.Equal(t, appName, response.GetAutomation().GetName())
 	assert.Equal(t, ns.Name, response.GetAutomation().GetNamespace())
