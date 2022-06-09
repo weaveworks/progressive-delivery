@@ -115,6 +115,8 @@ func withClientsPoolInterceptor(clientsFactory clustersmngr.ClientsFactory, conf
 
 		clientsFactory.UpdateUserNamespaces(ctx, user)
 
+		ctx = auth.WithPrincipal(ctx, user)
+
 		clusterClient, err := clientsFactory.GetImpersonatedClient(ctx, user)
 		if err != nil {
 			return nil, err

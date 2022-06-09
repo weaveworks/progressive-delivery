@@ -23,9 +23,10 @@ func Hydrate(ctx context.Context, mux *runtime.ServeMux, opts ServerOpts) error 
 type pdServer struct {
 	pb.UnimplementedProgressiveDeliveryServiceServer
 
-	version version.Fetcher
-	crd     crd.Fetcher
-	flagger flagger.Fetcher
+	clientsFactory clustersmngr.ClientsFactory
+	version        version.Fetcher
+	crd            crd.Fetcher
+	flagger        flagger.Fetcher
 }
 
 type ServerOpts struct {
@@ -50,9 +51,10 @@ func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServic
 	flaggerService := flagger.NewFetcher(opts.CRDService)
 
 	return &pdServer{
-		version: versionService,
-		crd:     opts.CRDService,
-		flagger: flaggerService,
+		clientsFactory: opts.ClientFactory,
+		version:        versionService,
+		crd:            opts.CRDService,
+		flagger:        flaggerService,
 	}, nil
 }
 

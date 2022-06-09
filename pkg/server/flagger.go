@@ -2,12 +2,13 @@ package server
 
 import (
 	"context"
+	"fmt"
 
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/convert"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
-	"github.com/weaveworks/weave-gitops/core/clustersmngr"
+	"github.com/weaveworks/weave-gitops/pkg/server/auth"
 	v1 "k8s.io/api/apps/v1"
 )
 
@@ -25,7 +26,10 @@ func (pd *pdServer) IsFlaggerAvailable(ctx context.Context, msg *pb.IsFlaggerAva
 }
 
 func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesRequest) (*pb.ListCanariesResponse, error) {
-	clusterClient := clustersmngr.ClientFromCtx(ctx)
+	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("error getting impersonated client: %w", err)
+	}
 
 	results, nextPageToken, listErr, err := pd.flagger.ListCanaryDeployments(
 		ctx,
@@ -66,7 +70,10 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 }
 
 func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*pb.GetCanaryResponse, error) {
-	clusterClient := clustersmngr.ClientFromCtx(ctx)
+	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("error getting impersonated client: %w", err)
+	}
 
 	canary, err := pd.flagger.GetCanary(ctx, clusterClient, flagger.GetCanaryOptions{
 		Name:        msg.Name,
