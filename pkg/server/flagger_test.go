@@ -55,3 +55,13 @@ func TestGetCanary(t *testing.T) {
 	assert.Equal(t, appName, response.GetAutomation().GetName())
 	assert.Equal(t, ns.Name, response.GetAutomation().GetNamespace())
 }
+
+func TestIsFlaggerAvailable(t *testing.T) {
+	ctx := context.Background()
+	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
+
+	response, err := c.IsFlaggerAvailable(ctx, &api.IsFlaggerAvailableRequest{})
+	assert.NoError(t, err)
+
+	assert.Len(t, response.GetClusters(), 1)
+}

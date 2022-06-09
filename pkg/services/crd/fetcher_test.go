@@ -97,3 +97,42 @@ func TestFetcher_IsAvailable(t *testing.T) {
 	found = service.IsAvailable("Other", "customobjects.example.com")
 	assert.False(t, found, "customobjects crd should not be defined in Other cluster")
 }
+
+func TestFetcher_IsAvailableOnClusters(t *testing.T) {
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	defer cancelFn()
+
+	service, err := newService(ctx, k8sEnv)
+	assert.NoError(t, err)
+
+	k, err := client.New(k8sEnv.Rest, client.Options{
+		Scheme: server.CreateScheme(),
+	})
+	assert.NoError(t, err)
+
+	newCRD(ctx, t, k,
+		crdInfo{
+			Singular: "xclustercustomon",
+			Group:    "example.com",
+			Plural:   "xclustercustomons",
+			Kind:     "CrossClusterCustomObject",
+		},
+	)
+
+	crdName := "xclustercustomons.example.com"
+
+	service.UpdateCRDList()
+
+	response := service.IsAvailableOnClusters(crdName)
+
+	assert.Len(t, response, 1, "cluster list should contain one entry")
+	assert.True(t, response["Default"], "%s should be available on Default cluster", crdName)
+
+	crdName = "xclusterothercustomons.example.com"
+
+	response = service.IsAvailableOnClusters(crdName)
+
+	assert.Len(t, response, 1, "cluster list should contain one entry")
+	assert.False(t, response["Default"], "%s shouldn't be available on Default cluster", crdName)
+}

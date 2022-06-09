@@ -14,6 +14,7 @@ const watchCRDsFrequency = 30 * time.Second
 
 type Fetcher interface {
 	IsAvailable(clusterName, name string) bool
+	IsAvailableOnClusters(name string) map[string]bool
 	UpdateCRDList()
 }
 
@@ -71,4 +72,26 @@ func (s *defaultFetcher) IsAvailable(clusterName, name string) bool {
 	}
 
 	return false
+}
+
+func (s *defaultFetcher) IsAvailableOnClusters(name string) map[string]bool {
+	result := map[string]bool{}
+
+	s.Lock()
+	defer s.Unlock()
+
+	for clusterName, crds := range s.crds {
+		// Set this to be sure the key is there with false value if the following
+		// look does not say it's there.
+		result[clusterName] = false
+
+		for _, crd := range crds {
+			if crd.Name == name {
+				result[clusterName] = true
+				break
+			}
+		}
+	}
+
+	return result
 }
