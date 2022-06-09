@@ -16,6 +16,7 @@ type Fetcher interface {
 	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
 	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
 	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
+	DeploymentStrategyFor(canary v1beta1.Canary) DeploymentStrategy
 }
 
 func NewFetcher(crdService crd.Fetcher) Fetcher {

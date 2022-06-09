@@ -62,6 +62,9 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 			deployment, _ := pd.flagger.FetchTargetRef(ctx, clusterName, clusterClient, &item)
 
 			pbObject := convert.FlaggerCanaryToProto(item, clusterName, deployment)
+
+			pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(item))
+
 			response.Canaries = append(response.Canaries, pbObject)
 		}
 	}
@@ -90,6 +93,8 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 	}
 
 	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment)
+
+	pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(*canary))
 
 	response := &pb.GetCanaryResponse{
 		Canary:     pbObject,

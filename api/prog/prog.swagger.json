@@ -187,6 +187,9 @@
         },
         "status": {
           "$ref": "#/definitions/CanaryStatus"
+        },
+        "deploymentStrategy": {
+          "type": "string"
         }
       }
     },
