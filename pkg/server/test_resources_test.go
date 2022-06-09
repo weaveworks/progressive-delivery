@@ -34,7 +34,7 @@ func newCanary(
 				Kind:       "Deployment",
 				Name:       name,
 			},
-			SkipAnalysis: true,
+			SkipAnalysis: false,
 			AutoscalerRef: &v1beta1.LocalObjectReference{
 				APIVersion: "autoscaling/v2",
 				Kind:       "HorizontalPodAutoscaler",

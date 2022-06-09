@@ -8,6 +8,7 @@ import (
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	api "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
+	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -29,6 +30,10 @@ func TestListCanaries(t *testing.T) {
 
 	assert.Len(t, response.GetCanaries(), 1, "should return one canary object")
 	assert.Empty(t, response.GetErrors(), "should not return with errors")
+	assert.Equal(t,
+		string(flagger.BlueGreenDeploymentStrategy),
+		response.GetCanaries()[0].GetDeploymentStrategy(),
+	)
 }
 
 func TestGetCanary(t *testing.T) {
@@ -54,6 +59,10 @@ func TestGetCanary(t *testing.T) {
 	assert.NotNil(t, response.GetAutomation())
 	assert.Equal(t, appName, response.GetAutomation().GetName())
 	assert.Equal(t, ns.Name, response.GetAutomation().GetNamespace())
+	assert.Equal(t,
+		string(flagger.BlueGreenDeploymentStrategy),
+		response.GetCanary().GetDeploymentStrategy(),
+	)
 }
 
 func TestIsFlaggerAvailable(t *testing.T) {
