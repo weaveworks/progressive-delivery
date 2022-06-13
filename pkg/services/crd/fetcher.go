@@ -2,6 +2,7 @@ package crd
 
 import (
 	"context"
+	"log"
 	"sync"
 	"time"
 
@@ -54,6 +55,8 @@ func (s *defaultFetcher) UpdateCRDList() {
 
 		err := client.List(ctx, crdList)
 		if err != nil {
+			log.Printf("unable to list crds on '%s' cluster: %s", clusterName, err)
+
 			continue
 		}
 
