@@ -1,0 +1,45 @@
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g. 'v1.2.3-rc.4')"
+        required: true
+
+name: Prepare Release
+jobs:
+  js-client:
+    name: Create JS Client
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.15.1]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "16.X"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@weaveworks"
+      - name: Set up environment vars
+        run: |
+          echo "BRANCH=releases/${{ github.event.inputs.version }}" >> $GITHUB_ENV
+          GITOPS_VERSION=$(echo ${{ github.event.inputs.version }} | tr -d v)
+          echo "GITOPS_VERSION=$GITOPS_VERSION" >> $GITHUB_ENV
+          git config user.name weave-gitops-bot
+          git config user.email weave-gitops-bot@weave.works
+
+      - name: Update npm package version
+        run: |
+          jq '.version = "'$GITOPS_VERSION'"' < ui/lib/package.json > ui/lib/package-new.json
+          mv package-new.json package.json
+          git commit -am "Update javascript library version to $GITOPS_VERSION"
+
+      - name: Build JS Lib
+        run: make js-lib
+
+      - name: Publish NPM Package
+        run: cd ui/lib/dist && npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

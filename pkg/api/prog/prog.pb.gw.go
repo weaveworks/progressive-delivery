@@ -185,13 +185,12 @@ func RegisterProgressiveDeliveryServiceHandlerServer(ctx context.Context, mux *r
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetVersion", runtime.WithHTTPPathPattern("/v1/version"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetVersion", runtime.WithHTTPPathPattern("/v1/version"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProgressiveDeliveryService_GetVersion_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProgressiveDeliveryService_GetVersion_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -209,13 +208,12 @@ func RegisterProgressiveDeliveryServiceHandlerServer(ctx context.Context, mux *r
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/ListCanaries", runtime.WithHTTPPathPattern("/v1/canaries"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/ListCanaries", runtime.WithHTTPPathPattern("/v1/canaries"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProgressiveDeliveryService_ListCanaries_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProgressiveDeliveryService_ListCanaries_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -233,13 +231,12 @@ func RegisterProgressiveDeliveryServiceHandlerServer(ctx context.Context, mux *r
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetCanary", runtime.WithHTTPPathPattern("/v1/canaries/{name}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetCanary", runtime.WithHTTPPathPattern("/v1/canaries/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProgressiveDeliveryService_GetCanary_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProgressiveDeliveryService_GetCanary_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -257,13 +254,12 @@ func RegisterProgressiveDeliveryServiceHandlerServer(ctx context.Context, mux *r
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/IsFlaggerAvailable", runtime.WithHTTPPathPattern("/v1/crd/flagger"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/.ProgressiveDeliveryService/IsFlaggerAvailable", runtime.WithHTTPPathPattern("/v1/crd/flagger"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := local_request_ProgressiveDeliveryService_IsFlaggerAvailable_0(ctx, inboundMarshaler, server, req, pathParams)
+		resp, md, err := local_request_ProgressiveDeliveryService_IsFlaggerAvailable_0(rctx, inboundMarshaler, server, req, pathParams)
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -320,13 +316,12 @@ func RegisterProgressiveDeliveryServiceHandlerClient(ctx context.Context, mux *r
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetVersion", runtime.WithHTTPPathPattern("/v1/version"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetVersion", runtime.WithHTTPPathPattern("/v1/version"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProgressiveDeliveryService_GetVersion_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProgressiveDeliveryService_GetVersion_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -341,13 +336,12 @@ func RegisterProgressiveDeliveryServiceHandlerClient(ctx context.Context, mux *r
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/ListCanaries", runtime.WithHTTPPathPattern("/v1/canaries"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/ListCanaries", runtime.WithHTTPPathPattern("/v1/canaries"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProgressiveDeliveryService_ListCanaries_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProgressiveDeliveryService_ListCanaries_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -362,13 +356,12 @@ func RegisterProgressiveDeliveryServiceHandlerClient(ctx context.Context, mux *r
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetCanary", runtime.WithHTTPPathPattern("/v1/canaries/{name}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/GetCanary", runtime.WithHTTPPathPattern("/v1/canaries/{name}"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProgressiveDeliveryService_GetCanary_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProgressiveDeliveryService_GetCanary_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
@@ -383,13 +376,12 @@ func RegisterProgressiveDeliveryServiceHandlerClient(ctx context.Context, mux *r
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		var err error
-		ctx, err = runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/IsFlaggerAvailable", runtime.WithHTTPPathPattern("/v1/crd/flagger"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/.ProgressiveDeliveryService/IsFlaggerAvailable", runtime.WithHTTPPathPattern("/v1/crd/flagger"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
-		resp, md, err := request_ProgressiveDeliveryService_IsFlaggerAvailable_0(ctx, inboundMarshaler, client, req, pathParams)
+		resp, md, err := request_ProgressiveDeliveryService_IsFlaggerAvailable_0(rctx, inboundMarshaler, client, req, pathParams)
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
