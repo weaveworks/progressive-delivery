@@ -95,7 +95,7 @@ func serve(cfg *appConfig) error {
 		CRDService:    crd.NewNoCacheFetcher(clusterClient),
 	}
 
-	pdServer, _ := server.NewProgressiveDeliveryServer(opts)
+	pdServer, _ := server.NewProgressiveDeliveryServer(ctx, opts)
 	address := fmt.Sprintf("%s:%s", cfg.Host, cfg.Port)
 
 	lis, err := net.Listen("tcp", address)

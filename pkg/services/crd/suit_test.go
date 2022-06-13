@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/weaveworks/weave-gitops/pkg/testutils"
 
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
@@ -34,5 +35,5 @@ func newService(ctx context.Context, k8sEnv *testutils.K8sTestEnv) (crd.Fetcher,
 		return nil, err
 	}
 
-	return crd.NewFetcher(ctx, client), nil
+	return crd.NewFetcher(ctx, logr.Discard(), client), nil
 }

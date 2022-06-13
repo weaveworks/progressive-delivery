@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
@@ -34,7 +35,7 @@ func newService(ctx context.Context, k8sEnv *testutils.K8sTestEnv) (flagger.Fetc
 		return nil, err
 	}
 
-	crdSrv := crd.NewFetcher(ctx, client)
+	crdSrv := crd.NewFetcher(ctx, logr.Discard(), client)
 
 	return flagger.NewFetcher(crdSrv), nil
 }

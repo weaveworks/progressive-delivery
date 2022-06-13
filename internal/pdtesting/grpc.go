@@ -58,7 +58,7 @@ func MakeGRPCServer(
 		CRDService:    crd.NewNoCacheFetcher(clusterClient),
 	}
 
-	pdServer, _ := server.NewProgressiveDeliveryServer(opts)
+	pdServer, _ := server.NewProgressiveDeliveryServer(context.Background(), opts)
 	lis := bufconn.Listen(1024 * 1024)
 	principal := &auth.UserPrincipal{}
 	s := grpc.NewServer(

@@ -2,10 +2,10 @@ package crd
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -19,8 +19,9 @@ type Fetcher interface {
 	UpdateCRDList()
 }
 
-func NewFetcher(ctx context.Context, clientPool clustersmngr.Client) Fetcher {
+func NewFetcher(ctx context.Context, logger logr.Logger, clientPool clustersmngr.Client) Fetcher {
 	fetcher := &defaultFetcher{
+		logger: logger.WithName("fetcher"),
 		client: clientPool,
 		crds:   map[string][]v1.CustomResourceDefinition{},
 	}
@@ -32,6 +33,7 @@ func NewFetcher(ctx context.Context, clientPool clustersmngr.Client) Fetcher {
 
 type defaultFetcher struct {
 	sync.RWMutex
+	logger logr.Logger
 	client clustersmngr.Client
 	crds   map[string][]v1.CustomResourceDefinition
 }
@@ -50,12 +52,13 @@ func (s *defaultFetcher) UpdateCRDList() {
 
 	ctx := context.Background()
 
+	s.logger.Info("updating CRD list", "clusters", s.client.ClientsPool().Clients())
 	for clusterName, client := range s.client.ClientsPool().Clients() {
 		crdList := &v1.CustomResourceDefinitionList{}
 
 		err := client.List(ctx, crdList)
 		if err != nil {
-			log.Printf("unable to list crds on '%s' cluster: %s", clusterName, err)
+			s.logger.Error(err, "unable to list CRDs", "cluster", clusterName)
 
 			continue
 		}

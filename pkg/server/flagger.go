@@ -20,6 +20,14 @@ const (
 )
 
 func (pd *pdServer) IsFlaggerAvailable(ctx context.Context, msg *pb.IsFlaggerAvailableRequest) (*pb.IsFlaggerAvailableResponse, error) {
+
+	clusterClient, err := pd.clientsFactory.GetServerClient(ctx)
+	if err != nil {
+		pd.logger.Error(err, "failed to get server client")
+		return nil, err
+	}
+	pd.logger.Info("listing clients", "clients", clusterClient.ClientsPool().Clients())
+
 	return &pb.IsFlaggerAvailableResponse{
 		Clusters: pd.crd.IsAvailableOnClusters(crd.FlaggerCRDName),
 	}, nil
@@ -37,6 +45,7 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 		flagger.ListCanaryDeploymentsOptions{},
 	)
 	if err != nil {
+		pd.logger.Error(err, "unable to list canaries", "clients", clusterClient.ClientsPool().Clients())
 		return nil, err
 	}
 
