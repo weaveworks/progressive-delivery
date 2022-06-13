@@ -1,6 +1,7 @@
 package convert
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
@@ -8,7 +9,7 @@ import (
 	v1 "k8s.io/api/apps/v1"
 )
 
-func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment v1.Deployment) *pb.Canary {
+func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment, primary v1.Deployment) *pb.Canary {
 	conditions := []*pb.CanaryCondition{}
 
 	for _, condition := range canary.Status.Conditions {
@@ -26,6 +27,9 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		KustomizeNamespace: deployment.Labels["kustomize.toolkit.fluxcd.io/namespace"],
 		KustomizeName:      deployment.Labels["kustomize.toolkit.fluxcd.io/name"],
 	}
+
+	targetSpec, _ := json.Marshal(deployment.Spec)
+	primarySpec, _ := json.Marshal(primary.Spec)
 
 	return &pb.Canary{
 		Name:        canary.GetName(),
@@ -49,5 +53,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 			LastTransitionTime: canary.Status.LastTransitionTime.Format(time.RFC3339),
 			Conditions:         conditions,
 		},
+		TargetDeploymentSpec:        string(targetSpec),
+		TargetPrimaryDeploymentSpec: string(primarySpec),
 	}
 }

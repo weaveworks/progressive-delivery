@@ -59,9 +59,19 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 			// Ignored intentioannly. The function returns with an error, but here we
 			// don't care about it, if it's not found, we can return to the client
 			// with an empty deployment.
-			deployment, _ := pd.flagger.FetchTargetRef(ctx, clusterName, clusterClient, &item)
+			deployment, primary, _ := pd.flagger.FetchTargetRef(
+				ctx,
+				clusterName,
+				clusterClient,
+				&item,
+			)
 
-			pbObject := convert.FlaggerCanaryToProto(item, clusterName, deployment)
+			pbObject := convert.FlaggerCanaryToProto(
+				item,
+				clusterName,
+				deployment,
+				primary,
+			)
 
 			pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(item))
 
@@ -87,12 +97,12 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 		return nil, err
 	}
 
-	deployment, err := pd.flagger.FetchTargetRef(ctx, msg.ClusterName, clusterClient, canary)
-	if err != nil {
-		return nil, err
-	}
+	// Ignored intentioannly. The function returns with an error, but here we
+	// don't care about it, if it's not found, we can return to the client
+	// with an empty deployment.
+	deployment, primary, _ := pd.flagger.FetchTargetRef(ctx, msg.ClusterName, clusterClient, canary)
 
-	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment)
+	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment, primary)
 
 	pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(*canary))
 

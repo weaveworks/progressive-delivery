@@ -22,6 +22,8 @@ message Canary {
   CanaryTargetDeployment target_deployment = 6;
   CanaryStatus status = 7;
   string deploymentStrategy = 8;
+  string target_deployment_spec = 9;
+  string target_primary_deployment_spec = 10;
 }
 
 message CanaryTargetReference {

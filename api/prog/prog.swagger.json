@@ -190,6 +190,12 @@
         },
         "deploymentStrategy": {
           "type": "string"
+        },
+        "targetDeploymentSpec": {
+          "type": "string"
+        },
+        "targetPrimaryDeploymentSpec": {
+          "type": "string"
         }
       }
     },

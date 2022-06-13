@@ -15,7 +15,7 @@ import (
 type Fetcher interface {
 	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
 	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
-	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
+	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, v1.Deployment, error)
 	DeploymentStrategyFor(canary v1beta1.Canary) DeploymentStrategy
 }
 
@@ -126,15 +126,25 @@ func (service *defaultFetcher) FetchTargetRef(
 	clusterName string,
 	clusterClient clustersmngr.Client,
 	canary *v1beta1.Canary,
-) (v1.Deployment, error) {
+) (v1.Deployment, v1.Deployment, error) {
 	deployment := v1.Deployment{}
+	deploymentPrimary := v1.Deployment{}
 
 	key := client.ObjectKey{
 		Name:      canary.Spec.TargetRef.Name,
 		Namespace: canary.GetNamespace(),
 	}
 
-	err := clusterClient.Get(ctx, clusterName, key, &deployment)
+	if err := clusterClient.Get(ctx, clusterName, key, &deployment); err != nil {
+		return deployment, deploymentPrimary, err
+	}
 
-	return deployment, err
+	key = client.ObjectKey{
+		Name:      fmt.Sprintf("%s-primary", canary.Spec.TargetRef.Name),
+		Namespace: canary.GetNamespace(),
+	}
+
+	err := clusterClient.Get(ctx, clusterName, key, &deploymentPrimary)
+
+	return deployment, deploymentPrimary, err
 }
