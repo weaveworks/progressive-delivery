@@ -43,19 +43,14 @@ func MakeHTTPServer(
 	_ = clientsFactory.UpdateClusters(ctx)
 	_ = clientsFactory.UpdateNamespaces(ctx)
 
-	clusterClient, err := clientsFactory.GetServerClient(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	opts := server.ServerOpts{
 		ClientFactory: clientsFactory,
-		CRDService:    crd.NewNoCacheFetcher(clusterClient),
+		CRDService:    crd.NewNoCacheFetcher(clientsFactory),
 	}
 
 	mux := runtime.NewServeMux()
 
-	err = server.Hydrate(ctx, mux, opts)
+	err := server.Hydrate(ctx, mux, opts)
 	if err != nil {
 		t.Error(err)
 	}

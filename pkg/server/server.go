@@ -37,15 +37,10 @@ type ServerOpts struct {
 func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServiceServer, error) {
 	ctx := context.Background()
 
-	clusterClient, err := opts.ClientFactory.GetServerClient(ctx)
-	if err != nil {
-		return nil, err
-	}
-
 	versionService := version.NewFetcher()
 
 	if opts.CRDService == nil {
-		opts.CRDService = crd.NewFetcher(ctx, clusterClient)
+		opts.CRDService = crd.NewFetcher(ctx, opts.ClientFactory)
 	}
 
 	flaggerService := flagger.NewFetcher(opts.CRDService)

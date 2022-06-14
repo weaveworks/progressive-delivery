@@ -11,7 +11,7 @@ import (
 	"github.com/weaveworks/weave-gitops/pkg/testutils"
 )
 
-func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, error) {
+func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, clustersmngr.ClientsFactory, error) {
 	ctx := context.Background()
 	log := logr.Discard()
 	fetcher := &clustersmngrfakes.FakeClusterFetcher{}
@@ -25,11 +25,13 @@ func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, error) {
 	)
 
 	if err := clientsFactory.UpdateClusters(ctx); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if err := clientsFactory.UpdateNamespaces(ctx); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return clientsFactory.GetServerClient(ctx)
+	client, err := clientsFactory.GetServerClient(ctx)
+
+	return client, clientsFactory, err
 }

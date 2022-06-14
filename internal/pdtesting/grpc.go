@@ -48,14 +48,9 @@ func MakeGRPCServer(
 	_ = clientsFactory.UpdateClusters(ctx)
 	_ = clientsFactory.UpdateNamespaces(ctx)
 
-	clusterClient, err := clientsFactory.GetServerClient(ctx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	opts := server.ServerOpts{
 		ClientFactory: clientsFactory,
-		CRDService:    crd.NewNoCacheFetcher(clusterClient),
+		CRDService:    crd.NewNoCacheFetcher(clientsFactory),
 	}
 
 	pdServer, _ := server.NewProgressiveDeliveryServer(opts)
