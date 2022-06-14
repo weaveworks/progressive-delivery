@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/go-logr/logr"
-	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
@@ -28,9 +27,9 @@ import (
 )
 
 type appConfig struct {
-	Host string
-	Port string
-	Log  logr.Logger
+	Host   string
+	Port   string
+	Logger logr.Logger
 }
 
 func NewApp(out io.Writer) *cli.App {
@@ -74,7 +73,7 @@ func serve(cfg *appConfig) error {
 	clientsFactory := clustersmngr.NewClientFactory(
 		fetcher,
 		&nsChecker,
-		cfg.Log,
+		cfg.Logger,
 		server.CreateScheme(),
 	)
 	clientsFactory.Start(ctx)
@@ -105,10 +104,10 @@ func serve(cfg *appConfig) error {
 	reflection.Register(s)
 
 	go func() {
-		log.Info("Starting server", "address", address)
+		cfg.Logger.Info("Starting server", "address", address)
 
 		if err := s.Serve(lis); err != nil {
-			log.Error(err, "server exited")
+			cfg.Logger.Error(err, "server exited")
 			os.Exit(1)
 		}
 	}()
