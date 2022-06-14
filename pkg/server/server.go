@@ -43,7 +43,7 @@ func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServic
 	versionService := version.NewFetcher()
 
 	if opts.CRDService == nil {
-		opts.CRDService = crd.NewFetcher(ctx, opts.ClientFactory)
+		opts.CRDService = crd.NewFetcher(ctx, opts.Logger, opts.ClientFactory)
 	}
 
 	flaggerService := flagger.NewFetcher(opts.CRDService)
