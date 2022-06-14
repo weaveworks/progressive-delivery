@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 
+	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
@@ -27,11 +28,13 @@ type pdServer struct {
 	version        version.Fetcher
 	crd            crd.Fetcher
 	flagger        flagger.Fetcher
+	logger         logr.Logger
 }
 
 type ServerOpts struct {
 	ClientFactory clustersmngr.ClientsFactory
 	CRDService    crd.Fetcher
+	Logger        logr.Logger
 }
 
 func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServiceServer, error) {
@@ -50,6 +53,7 @@ func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServic
 		version:        versionService,
 		crd:            opts.CRDService,
 		flagger:        flaggerService,
+		logger:         opts.Logger,
 	}, nil
 }
 
