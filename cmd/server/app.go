@@ -10,6 +10,8 @@ import (
 	"syscall"
 	"time"
 
+	stdlog "log"
+
 	"github.com/go-logr/logr"
 	"github.com/urfave/cli/v2"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
@@ -17,6 +19,7 @@ import (
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr/fetcher"
+	"github.com/weaveworks/weave-gitops/core/logger"
 	"github.com/weaveworks/weave-gitops/core/nsaccess/nsaccessfakes"
 	"github.com/weaveworks/weave-gitops/pkg/server/auth"
 	"google.golang.org/grpc"
@@ -33,7 +36,14 @@ type appConfig struct {
 }
 
 func NewApp(out io.Writer) *cli.App {
-	cfg := &appConfig{}
+	log, err := logger.New(logger.DefaultLogLevel, os.Getenv("HUMAN_LOGS") != "")
+	if err != nil {
+		stdlog.Fatalf("Couldn't set up logger: %v", err)
+	}
+
+	cfg := &appConfig{
+		Logger: log,
+	}
 
 	app := &cli.App{
 		Name:  "server",
