@@ -68,7 +68,12 @@ func (service *defaultFetcher) ListCanaryDeployments(
 		}
 
 		for _, e := range errs.Errors {
-			respErrors = append(respErrors, CanaryListError{ClusterName: e.Cluster, Err: e.Err})
+			// If flagger is not installed, skip all errors reported from that
+			// cluster, an extra error will be appended to the error list later if
+			// Flagger is not available.
+			if service.crdService.IsAvailable(e.Cluster, crd.FlaggerCRDName) {
+				respErrors = append(respErrors, CanaryListError{ClusterName: e.Cluster, Err: e.Err})
+			}
 		}
 	}
 
