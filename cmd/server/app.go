@@ -10,13 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-logr/logr"
 	"github.com/urfave/cli/v2"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr/fetcher"
-	"github.com/weaveworks/weave-gitops/core/logger"
 	"github.com/weaveworks/weave-gitops/core/nsaccess/nsaccessfakes"
 	"github.com/weaveworks/weave-gitops/pkg/server/auth"
 	"google.golang.org/grpc"
@@ -27,8 +27,9 @@ import (
 )
 
 type appConfig struct {
-	Host string
-	Port string
+	Host   string
+	Port   string
+	Logger logr.Logger
 }
 
 func NewApp(out io.Writer) *cli.App {
@@ -54,11 +55,6 @@ func NewApp(out io.Writer) *cli.App {
 }
 
 func serve(cfg *appConfig) error {
-	log, err := logger.New("debug", true)
-	if err != nil {
-		return err
-	}
-
 	ctx := context.Background()
 
 	restCfg, err := config.GetConfig()
@@ -77,7 +73,7 @@ func serve(cfg *appConfig) error {
 	clientsFactory := clustersmngr.NewClientFactory(
 		fetcher,
 		&nsChecker,
-		log,
+		cfg.Logger,
 		server.CreateScheme(),
 	)
 	clientsFactory.Start(ctx)
@@ -108,10 +104,10 @@ func serve(cfg *appConfig) error {
 	reflection.Register(s)
 
 	go func() {
-		log.Info("Starting server", "address", address)
+		cfg.Logger.Info("Starting server", "address", address)
 
 		if err := s.Serve(lis); err != nil {
-			log.Error(err, "server exited")
+			cfg.Logger.Error(err, "server exited")
 			os.Exit(1)
 		}
 	}()

@@ -2,9 +2,9 @@ package crd
 
 import (
 	"context"
-	"log"
 	"sync"
 
+	"github.com/go-logr/logr"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
@@ -20,6 +20,7 @@ func NewNoCacheFetcher(clientFactory clustersmngr.ClientsFactory) Fetcher {
 
 type noCacheFetcher struct {
 	sync.RWMutex
+	logger        logr.Logger
 	clientFactory clustersmngr.ClientsFactory
 	crds          map[string][]v1.CustomResourceDefinition
 }
@@ -32,7 +33,7 @@ func (s *noCacheFetcher) UpdateCRDList() {
 
 	client, err := s.clientFactory.GetServerClient(ctx)
 	if err != nil {
-		log.Printf("unable to get client pool: %s", err)
+		s.logger.Error(err, "unable to get client pool")
 
 		return
 	}
@@ -44,7 +45,7 @@ func (s *noCacheFetcher) UpdateCRDList() {
 
 		err := client.List(ctx, crdList)
 		if err != nil {
-			log.Printf("unable to list crds: %s", err)
+			s.logger.Error(err, "unable to list crds")
 			continue
 		}
 
