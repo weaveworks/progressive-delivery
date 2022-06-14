@@ -40,6 +40,8 @@ func (s *noCacheFetcher) UpdateCRDList() {
 	for clusterName, client := range client.ClientsPool().Clients() {
 		crdList := &v1.CustomResourceDefinitionList{}
 
+		s.crds[clusterName] = []v1.CustomResourceDefinition{}
+
 		err := client.List(ctx, crdList)
 		if err != nil {
 			log.Printf("unable to list crds: %s", err)
