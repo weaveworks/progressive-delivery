@@ -19,10 +19,10 @@ type Fetcher interface {
 	UpdateCRDList()
 }
 
-func NewFetcher(ctx context.Context, clientPool clustersmngr.Client) Fetcher {
+func NewFetcher(ctx context.Context, clientFactory clustersmngr.ClientsFactory) Fetcher {
 	fetcher := &defaultFetcher{
-		client: clientPool,
-		crds:   map[string][]v1.CustomResourceDefinition{},
+		clientFactory: clientFactory,
+		crds:          map[string][]v1.CustomResourceDefinition{},
 	}
 
 	go fetcher.watchCRDs(ctx)
@@ -32,8 +32,8 @@ func NewFetcher(ctx context.Context, clientPool clustersmngr.Client) Fetcher {
 
 type defaultFetcher struct {
 	sync.RWMutex
-	client clustersmngr.Client
-	crds   map[string][]v1.CustomResourceDefinition
+	clientFactory clustersmngr.ClientsFactory
+	crds          map[string][]v1.CustomResourceDefinition
 }
 
 func (s *defaultFetcher) watchCRDs(ctx context.Context) {
@@ -50,7 +50,14 @@ func (s *defaultFetcher) UpdateCRDList() {
 
 	ctx := context.Background()
 
-	for clusterName, client := range s.client.ClientsPool().Clients() {
+	client, err := s.clientFactory.GetServerClient(ctx)
+	if err != nil {
+		log.Printf("unable to get client pool: %s", err)
+
+		return
+	}
+
+	for clusterName, client := range client.ClientsPool().Clients() {
 		crdList := &v1.CustomResourceDefinitionList{}
 
 		err := client.List(ctx, crdList)
