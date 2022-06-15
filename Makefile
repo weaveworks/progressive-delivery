@@ -1,6 +1,9 @@
-.PHONY: proto test lint dependencies js-lib clean
+.PHONY: tools proto test lint dependencies js-lib clean
 
 CURRENT_DIR := $(shell pwd)
+
+tools: ## Install Go tools
+	@go install $(shell go list -f '{{join .Imports " "}}' tools/tools.go)
 
 proto: ## Generate code from prot files
 	buf generate
