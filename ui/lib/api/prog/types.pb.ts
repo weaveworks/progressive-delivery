@@ -23,6 +23,7 @@ export type Canary = {
   targetDeployment?: CanaryTargetDeployment
   status?: CanaryStatus
   deploymentStrategy?: string
+  yaml?: string
 }
 
 export type CanaryTargetReference = {

@@ -5,6 +5,7 @@ import (
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
+	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/apps/v1"
 )
 
@@ -26,6 +27,8 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		KustomizeNamespace: deployment.Labels["kustomize.toolkit.fluxcd.io/namespace"],
 		KustomizeName:      deployment.Labels["kustomize.toolkit.fluxcd.io/name"],
 	}
+
+	canaryYaml, _ := yaml.Marshal(canary)
 
 	return &pb.Canary{
 		Name:        canary.GetName(),
@@ -49,5 +52,6 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 			LastTransitionTime: canary.Status.LastTransitionTime.Format(time.RFC3339),
 			Conditions:         conditions,
 		},
+		Yaml: string(canaryYaml),
 	}
 }
