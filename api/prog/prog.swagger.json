@@ -190,6 +190,9 @@
         },
         "deploymentStrategy": {
           "type": "string"
+        },
+        "yaml": {
+          "type": "string"
         }
       }
     },
