@@ -36,7 +36,7 @@ roleRef:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name:  progressive-deliver-admin-crb
+  name:  progressive-delivery-admin-crb
 subjects:
 - kind: User
   name: pd-admin
