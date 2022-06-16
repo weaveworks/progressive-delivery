@@ -10,7 +10,7 @@ import "api/prog/types.proto";
 service ProgressiveDeliveryService {
     rpc GetVersion(GetVersionRequest) returns (GetVersionResponse) {
         option (google.api.http) = {
-            get : "/v1/version"
+            get : "/v1/pd/version"
         };
     }
 
@@ -19,7 +19,7 @@ service ProgressiveDeliveryService {
     */
     rpc ListCanaries(ListCanariesRequest) returns (ListCanariesResponse) {
         option (google.api.http) = {
-            get : "/v1/canaries",
+            get : "/v1/pd/canaries",
         };
     }
 
@@ -28,7 +28,7 @@ service ProgressiveDeliveryService {
     */
     rpc GetCanary(GetCanaryRequest) returns (GetCanaryResponse) {
         option (google.api.http) = {
-            get : "/v1/canaries/{name}",
+            get : "/v1/pd/canaries/{name}",
         };
     }
 
@@ -39,7 +39,7 @@ service ProgressiveDeliveryService {
     */
     rpc IsFlaggerAvailable(IsFlaggerAvailableRequest) returns (IsFlaggerAvailableResponse) {
         option (google.api.http) = {
-            get : "/v1/crd/flagger",
+            get : "/v1/pd/crd/flagger",
         };
     }
 }
