@@ -13,3 +13,7 @@ special_tarpath="https://github.com/tilt-dev/tilt/releases/download/v${version}/
 [helm]
 version="3.8.2"
 special_tarpath="https://get.helm.sh/helm-v${version}-${goos}-${goarch}.tar.gz;${goos}-${goarch}/helm"
+
+[kind]
+version="0.14.0"
+binarypath="https://kind.sigs.k8s.io/dl/v${version}/kind-${goos}-${goarch}"
