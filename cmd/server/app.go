@@ -104,7 +104,10 @@ func serve(cfg *appConfig) error {
 		return err
 	}
 
-	principal := &auth.UserPrincipal{}
+	principal := &auth.UserPrincipal{
+		ID:     "pd-admin",
+		Groups: []string{"admin"},
+	}
 	s := grpc.NewServer(
 		withClientsPoolInterceptor(clientsFactory, restCfg, principal),
 	)
@@ -153,6 +156,7 @@ func withClientsPoolInterceptor(clientsFactory clustersmngr.ClientsFactory, conf
 			return nil, err
 		}
 
+		ctx = auth.WithPrincipal(ctx, user)
 		ctx = context.WithValue(ctx, clustersmngr.ClustersClientCtxKey, clusterClient)
 
 		return handler(ctx, req)
