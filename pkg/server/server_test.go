@@ -27,7 +27,7 @@ func TestHydrate(t *testing.T) {
 
 	defer ts.Close()
 
-	res, err := http.Get(ts.URL + "/v1/version")
+	res, err := http.Get(ts.URL + "/v1/pd/version")
 	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode, "should have been ok")
