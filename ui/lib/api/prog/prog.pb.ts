@@ -44,15 +44,15 @@ export type IsFlaggerAvailableResponse = {
 
 export class ProgressiveDeliveryService {
   static GetVersion(req: GetVersionRequest, initReq?: fm.InitReq): Promise<GetVersionResponse> {
-    return fm.fetchReq<GetVersionRequest, GetVersionResponse>(`/v1/version?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+    return fm.fetchReq<GetVersionRequest, GetVersionResponse>(`/v1/pd/version?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
   static ListCanaries(req: ListCanariesRequest, initReq?: fm.InitReq): Promise<ListCanariesResponse> {
-    return fm.fetchReq<ListCanariesRequest, ListCanariesResponse>(`/v1/canaries?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+    return fm.fetchReq<ListCanariesRequest, ListCanariesResponse>(`/v1/pd/canaries?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
   static GetCanary(req: GetCanaryRequest, initReq?: fm.InitReq): Promise<GetCanaryResponse> {
-    return fm.fetchReq<GetCanaryRequest, GetCanaryResponse>(`/v1/canaries/${req["name"]}?${fm.renderURLSearchParams(req, ["name"])}`, {...initReq, method: "GET"})
+    return fm.fetchReq<GetCanaryRequest, GetCanaryResponse>(`/v1/pd/canaries/${req["name"]}?${fm.renderURLSearchParams(req, ["name"])}`, {...initReq, method: "GET"})
   }
   static IsFlaggerAvailable(req: IsFlaggerAvailableRequest, initReq?: fm.InitReq): Promise<IsFlaggerAvailableResponse> {
-    return fm.fetchReq<IsFlaggerAvailableRequest, IsFlaggerAvailableResponse>(`/v1/crd/flagger?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+    return fm.fetchReq<IsFlaggerAvailableRequest, IsFlaggerAvailableResponse>(`/v1/pd/crd/flagger?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
 }

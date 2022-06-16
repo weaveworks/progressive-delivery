@@ -16,7 +16,7 @@
     "application/json"
   ],
   "paths": {
-    "/v1/canaries": {
+    "/v1/pd/canaries": {
       "get": {
         "summary": "ListCanaries returns with a list of Canary objects.",
         "operationId": "ProgressiveDeliveryService_ListCanaries",
@@ -60,7 +60,7 @@
         ]
       }
     },
-    "/v1/canaries/{name}": {
+    "/v1/pd/canaries/{name}": {
       "get": {
         "summary": "GetCanary returns a Canary object.",
         "operationId": "ProgressiveDeliveryService_GetCanary",
@@ -103,7 +103,7 @@
         ]
       }
     },
-    "/v1/crd/flagger": {
+    "/v1/pd/crd/flagger": {
       "get": {
         "summary": "IsFlaggerAvailable returns with a hashmap where the keys are the names of\nthe clusters, and the value is a boolean indicating whether Flagger is\ninstalled or not on that cluster.",
         "operationId": "ProgressiveDeliveryService_IsFlaggerAvailable",
@@ -126,7 +126,7 @@
         ]
       }
     },
-    "/v1/version": {
+    "/v1/pd/version": {
       "get": {
         "operationId": "ProgressiveDeliveryService_GetVersion",
         "responses": {
