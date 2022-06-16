@@ -29,6 +29,7 @@ If something goes wrong, delete the cluster and re-create it:
 Deploy flux on the cluster:
 
 ```bash
+export GITHUB_USER="<your-username>"
 export GITHUB_REPO="${GITHUB_REPO:-pd-dev}"
 ./tools/bin/flux bootstrap github \
   --owner="$GITHUB_USER" \
@@ -47,14 +48,14 @@ make dev-cluster
 ```
 
 Your system should build and start. The first time you run this, it will
-take ~2-2 mins (depending on your connection speed) to build the container and
+take ~1-2 mins (depending on your connection speed) to build the container and
 deploy it to your local cluster. This is because the docker builds have to
 download all the Go modules from scratch, use the Tilt UI to check progress.
 Subsequent runs should be a lot faster.
 
 ### Making API requests to the dev cluster
 
-Use ea gRPC client to interact with the API, for example:
+Use a gRPC client to interact with the API, for example:
 
 * [BloomRPC](https://github.com/bloomrpc/bloomrpc) has a nice GUI.
 * [gRPCurl](https://github.com/fullstorydev/grpcurl) can be used from command
@@ -176,8 +177,8 @@ Use ea gRPC client to interact with the API, for example:
 
 * For `proto` files, follow [ProtoBuf Style Guide][pb-style].
 * For `go` files, `make lint` will tell at your.
-* For testing, we prefer [white-box testing][wb-testing].
+* For testing, we prefer [black-box testing][bb-testing].
    (tl;dr: use `mypackage_test` packages)
 
 [pb-style]: https://developers.google.com/protocol-buffers/docs/style
-[wb-testing]: https://en.wikipedia.org/wiki/White-box_testing
+[bb-testing]: https://en.wikipedia.org/wiki/Black-box_testing
