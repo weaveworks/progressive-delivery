@@ -23,6 +23,7 @@ export type Canary = {
   targetDeployment?: CanaryTargetDeployment
   status?: CanaryStatus
   deploymentStrategy?: string
+  analysis?: CanaryAnalysis
   yaml?: string
 }
 
@@ -64,4 +65,17 @@ export type Automation = {
   kind?: string
   name?: string
   namespace?: string
+}
+
+export type CanaryAnalysis = {
+  interval?: string
+  iterations?: number
+  mirrorWeight?: number
+  maxWeight?: number
+  stepWeight?: number
+  stepWeightPromotion?: number
+  threshold?: number
+  stepWeights?: number[]
+  mirror?: boolean
+  yaml?: string
 }

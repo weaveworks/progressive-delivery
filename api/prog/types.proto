@@ -22,7 +22,8 @@ message Canary {
   CanaryTargetDeployment target_deployment = 6;
   CanaryStatus status = 7;
   string deploymentStrategy = 8;
-  string yaml = 9;
+  CanaryAnalysis analysis = 9;
+  string yaml = 10;
 }
 
 message CanaryTargetReference {
@@ -63,4 +64,17 @@ message Automation {
   string kind = 1;
   string name = 2;
   string namespace = 3;
+}
+
+message CanaryAnalysis {
+  string interval = 1;
+  int32 iterations = 2;
+  int32 mirror_weight = 3;
+  int32 max_weight = 4;
+  int32 step_weight = 5;
+  int32 step_weight_promotion = 6;
+  int32 threshold = 7;
+  repeated int32 step_weights = 8;
+  bool mirror = 9;
+  string yaml = 10;
 }

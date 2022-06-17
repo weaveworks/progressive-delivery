@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
+	"github.com/go-asset/generics/list"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/apps/v1"
@@ -29,6 +30,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 	}
 
 	canaryYaml, _ := yaml.Marshal(canary)
+	analysisYaml, _ := yaml.Marshal(canary.Spec.Analysis)
 
 	return &pb.Canary{
 		Name:        canary.GetName(),
@@ -43,6 +45,21 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 			Uid:             string(deployment.GetObjectMeta().GetUID()),
 			ResourceVersion: deployment.GetObjectMeta().GetResourceVersion(),
 			FluxLabels:      fluxLabels,
+		},
+		Analysis: &pb.CanaryAnalysis{
+			Interval:            canary.Spec.Analysis.Interval,
+			Iterations:          int32(canary.Spec.Analysis.Iterations),
+			MirrorWeight:        int32(canary.Spec.Analysis.MirrorWeight),
+			MaxWeight:           int32(canary.Spec.Analysis.MaxWeight),
+			StepWeight:          int32(canary.Spec.Analysis.StepWeight),
+			StepWeightPromotion: int32(canary.Spec.Analysis.StepWeightPromotion),
+			Threshold:           int32(canary.Spec.Analysis.Threshold),
+			Mirror:              canary.Spec.Analysis.Mirror,
+			Yaml:                string(analysisYaml),
+			StepWeights: list.Map(
+				canary.Spec.Analysis.StepWeights,
+				func(v int) int32 { return int32(v) },
+			),
 		},
 		Status: &pb.CanaryStatus{
 			Phase:              string(canary.Status.Phase),

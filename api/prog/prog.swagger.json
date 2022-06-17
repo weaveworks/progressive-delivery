@@ -191,6 +191,54 @@
         "deploymentStrategy": {
           "type": "string"
         },
+        "analysis": {
+          "$ref": "#/definitions/CanaryAnalysis"
+        },
+        "yaml": {
+          "type": "string"
+        }
+      }
+    },
+    "CanaryAnalysis": {
+      "type": "object",
+      "properties": {
+        "interval": {
+          "type": "string"
+        },
+        "iterations": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mirrorWeight": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxWeight": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stepWeight": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stepWeightPromotion": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "threshold": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "stepWeights": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "mirror": {
+          "type": "boolean"
+        },
         "yaml": {
           "type": "string"
         }
