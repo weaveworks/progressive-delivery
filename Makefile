@@ -23,7 +23,7 @@ dev-cluster: ## Start a dev server with Tilt
 ui/lib/dist/index.js: ui/lib/node_modules
 	cd ui/lib && yarn compile
 
-ui/lib/dist/package.json:
+ui/lib/dist/package.json: ui/lib/package.json
 	cp ui/lib/package.json ui/lib/dist
 
 js-lib: ui/lib/dist/index.js ui/lib/dist/package.json
