@@ -14,7 +14,7 @@ import (
 func TestFlagger_DeploymentStrategyFor_Canary(t *testing.T) {
 	ctx := context.Background()
 
-	service, err := newService(ctx, k8sEnv)
+	_, service, err := newService(ctx, k8sEnv)
 	assert.NoError(t, err)
 
 	canary := v1beta1.Canary{
@@ -40,7 +40,7 @@ func TestFlagger_DeploymentStrategyFor_Canary(t *testing.T) {
 func TestFlagger_DeploymentStrategyFor_BlueGreen(t *testing.T) {
 	ctx := context.Background()
 
-	service, err := newService(ctx, k8sEnv)
+	_, service, err := newService(ctx, k8sEnv)
 	assert.NoError(t, err)
 
 	canary := v1beta1.Canary{
@@ -66,7 +66,7 @@ func TestFlagger_DeploymentStrategyFor_BlueGreen(t *testing.T) {
 func TestFlagger_DeploymentStrategyFor_BlueGreenMirror(t *testing.T) {
 	ctx := context.Background()
 
-	service, err := newService(ctx, k8sEnv)
+	_, service, err := newService(ctx, k8sEnv)
 	assert.NoError(t, err)
 
 	canary := v1beta1.Canary{
@@ -92,7 +92,7 @@ func TestFlagger_DeploymentStrategyFor_BlueGreenMirror(t *testing.T) {
 func TestFlagger_DeploymentStrategyFor_ABTesting(t *testing.T) {
 	ctx := context.Background()
 
-	service, err := newService(ctx, k8sEnv)
+	_, service, err := newService(ctx, k8sEnv)
 	assert.NoError(t, err)
 
 	canary := v1beta1.Canary{
@@ -124,7 +124,7 @@ func TestFlagger_DeploymentStrategyFor_ABTesting(t *testing.T) {
 func TestFlagger_DeploymentStrategyFor_NoAnalysis(t *testing.T) {
 	ctx := context.Background()
 
-	service, err := newService(ctx, k8sEnv)
+	_, service, err := newService(ctx, k8sEnv)
 	assert.NoError(t, err)
 
 	canary := v1beta1.Canary{

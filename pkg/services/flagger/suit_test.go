@@ -8,6 +8,7 @@ import (
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
+	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	"github.com/weaveworks/weave-gitops/pkg/testutils"
 )
 
@@ -28,13 +29,13 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-func newService(ctx context.Context, k8sEnv *testutils.K8sTestEnv) (flagger.Fetcher, error) {
-	_, clientFactory, err := pdtesting.CreateClient(k8sEnv)
+func newService(ctx context.Context, k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, flagger.Fetcher, error) {
+	cl, clientFactory, err := pdtesting.CreateClient(k8sEnv)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	crdSrv := crd.NewNoCacheFetcher(clientFactory)
 
-	return flagger.NewFetcher(crdSrv), nil
+	return cl, flagger.NewFetcher(crdSrv), nil
 }

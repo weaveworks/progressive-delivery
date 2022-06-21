@@ -672,16 +672,17 @@ type CanaryAnalysis struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Interval            string  `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval,omitempty"`
-	Iterations          int32   `protobuf:"varint,2,opt,name=iterations,proto3" json:"iterations,omitempty"`
-	MirrorWeight        int32   `protobuf:"varint,3,opt,name=mirror_weight,json=mirrorWeight,proto3" json:"mirror_weight,omitempty"`
-	MaxWeight           int32   `protobuf:"varint,4,opt,name=max_weight,json=maxWeight,proto3" json:"max_weight,omitempty"`
-	StepWeight          int32   `protobuf:"varint,5,opt,name=step_weight,json=stepWeight,proto3" json:"step_weight,omitempty"`
-	StepWeightPromotion int32   `protobuf:"varint,6,opt,name=step_weight_promotion,json=stepWeightPromotion,proto3" json:"step_weight_promotion,omitempty"`
-	Threshold           int32   `protobuf:"varint,7,opt,name=threshold,proto3" json:"threshold,omitempty"`
-	StepWeights         []int32 `protobuf:"varint,8,rep,packed,name=step_weights,json=stepWeights,proto3" json:"step_weights,omitempty"`
-	Mirror              bool    `protobuf:"varint,9,opt,name=mirror,proto3" json:"mirror,omitempty"`
-	Yaml                string  `protobuf:"bytes,10,opt,name=yaml,proto3" json:"yaml,omitempty"`
+	Interval            string                  `protobuf:"bytes,1,opt,name=interval,proto3" json:"interval,omitempty"`
+	Iterations          int32                   `protobuf:"varint,2,opt,name=iterations,proto3" json:"iterations,omitempty"`
+	MirrorWeight        int32                   `protobuf:"varint,3,opt,name=mirror_weight,json=mirrorWeight,proto3" json:"mirror_weight,omitempty"`
+	MaxWeight           int32                   `protobuf:"varint,4,opt,name=max_weight,json=maxWeight,proto3" json:"max_weight,omitempty"`
+	StepWeight          int32                   `protobuf:"varint,5,opt,name=step_weight,json=stepWeight,proto3" json:"step_weight,omitempty"`
+	StepWeightPromotion int32                   `protobuf:"varint,6,opt,name=step_weight_promotion,json=stepWeightPromotion,proto3" json:"step_weight_promotion,omitempty"`
+	Threshold           int32                   `protobuf:"varint,7,opt,name=threshold,proto3" json:"threshold,omitempty"`
+	StepWeights         []int32                 `protobuf:"varint,8,rep,packed,name=step_weights,json=stepWeights,proto3" json:"step_weights,omitempty"`
+	Mirror              bool                    `protobuf:"varint,9,opt,name=mirror,proto3" json:"mirror,omitempty"`
+	Yaml                string                  `protobuf:"bytes,10,opt,name=yaml,proto3" json:"yaml,omitempty"`
+	MetricTemplates     []*CanaryMetricTemplate `protobuf:"bytes,11,rep,name=metric_templates,json=metricTemplates,proto3" json:"metric_templates,omitempty"`
 }
 
 func (x *CanaryAnalysis) Reset() {
@@ -786,6 +787,163 @@ func (x *CanaryAnalysis) GetYaml() string {
 	return ""
 }
 
+func (x *CanaryAnalysis) GetMetricTemplates() []*CanaryMetricTemplate {
+	if x != nil {
+		return x.MetricTemplates
+	}
+	return nil
+}
+
+type CanaryMetricTemplate struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ClusterName string          `protobuf:"bytes,1,opt,name=cluster_name,json=clusterName,proto3" json:"cluster_name,omitempty"`
+	Name        string          `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Namespace   string          `protobuf:"bytes,3,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Provider    *MetricProvider `protobuf:"bytes,4,opt,name=provider,proto3" json:"provider,omitempty"`
+	Query       string          `protobuf:"bytes,5,opt,name=query,proto3" json:"query,omitempty"`
+}
+
+func (x *CanaryMetricTemplate) Reset() {
+	*x = CanaryMetricTemplate{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_prog_types_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CanaryMetricTemplate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CanaryMetricTemplate) ProtoMessage() {}
+
+func (x *CanaryMetricTemplate) ProtoReflect() protoreflect.Message {
+	mi := &file_api_prog_types_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CanaryMetricTemplate.ProtoReflect.Descriptor instead.
+func (*CanaryMetricTemplate) Descriptor() ([]byte, []int) {
+	return file_api_prog_types_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *CanaryMetricTemplate) GetClusterName() string {
+	if x != nil {
+		return x.ClusterName
+	}
+	return ""
+}
+
+func (x *CanaryMetricTemplate) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CanaryMetricTemplate) GetNamespace() string {
+	if x != nil {
+		return x.Namespace
+	}
+	return ""
+}
+
+func (x *CanaryMetricTemplate) GetProvider() *MetricProvider {
+	if x != nil {
+		return x.Provider
+	}
+	return nil
+}
+
+func (x *CanaryMetricTemplate) GetQuery() string {
+	if x != nil {
+		return x.Query
+	}
+	return ""
+}
+
+type MetricProvider struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Type               string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Address            string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+	SecretName         string `protobuf:"bytes,4,opt,name=secret_name,json=secretName,proto3" json:"secret_name,omitempty"`
+	InsecureSkipVerify bool   `protobuf:"varint,3,opt,name=insecure_skip_verify,json=insecureSkipVerify,proto3" json:"insecure_skip_verify,omitempty"`
+}
+
+func (x *MetricProvider) Reset() {
+	*x = MetricProvider{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_prog_types_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MetricProvider) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MetricProvider) ProtoMessage() {}
+
+func (x *MetricProvider) ProtoReflect() protoreflect.Message {
+	mi := &file_api_prog_types_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MetricProvider.ProtoReflect.Descriptor instead.
+func (*MetricProvider) Descriptor() ([]byte, []int) {
+	return file_api_prog_types_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *MetricProvider) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *MetricProvider) GetAddress() string {
+	if x != nil {
+		return x.Address
+	}
+	return ""
+}
+
+func (x *MetricProvider) GetSecretName() string {
+	if x != nil {
+		return x.SecretName
+	}
+	return ""
+}
+
+func (x *MetricProvider) GetInsecureSkipVerify() bool {
+	if x != nil {
+		return x.InsecureSkipVerify
+	}
+	return false
+}
+
 var File_api_prog_types_proto protoreflect.FileDescriptor
 
 var file_api_prog_types_proto_rawDesc = []byte{
@@ -879,7 +1037,7 @@ var file_api_prog_types_proto_rawDesc = []byte{
 	0x52, 0x04, 0x6b, 0x69, 0x6e, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x6e, 0x61,
 	0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x6e,
-	0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x22, 0xd2, 0x02, 0x0a, 0x0e, 0x43, 0x61, 0x6e,
+	0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x22, 0x94, 0x03, 0x0a, 0x0e, 0x43, 0x61, 0x6e,
 	0x61, 0x72, 0x79, 0x41, 0x6e, 0x61, 0x6c, 0x79, 0x73, 0x69, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x69,
 	0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x69,
 	0x6e, 0x74, 0x65, 0x72, 0x76, 0x61, 0x6c, 0x12, 0x1e, 0x0a, 0x0a, 0x69, 0x74, 0x65, 0x72, 0x61,
@@ -900,11 +1058,35 @@ var file_api_prog_types_proto_rawDesc = []byte{
 	0x20, 0x03, 0x28, 0x05, 0x52, 0x0b, 0x73, 0x74, 0x65, 0x70, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74,
 	0x73, 0x12, 0x16, 0x0a, 0x06, 0x6d, 0x69, 0x72, 0x72, 0x6f, 0x72, 0x18, 0x09, 0x20, 0x01, 0x28,
 	0x08, 0x52, 0x06, 0x6d, 0x69, 0x72, 0x72, 0x6f, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x79, 0x61, 0x6d,
-	0x6c, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x79, 0x61, 0x6d, 0x6c, 0x42, 0x30, 0x5a,
-	0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x77, 0x65, 0x61, 0x76,
-	0x65, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x2f, 0x70, 0x72, 0x6f, 0x67, 0x72, 0x65, 0x73, 0x73, 0x69,
-	0x76, 0x65, 0x2d, 0x64, 0x65, 0x6c, 0x69, 0x76, 0x65, 0x72, 0x79, 0x2f, 0x61, 0x70, 0x69, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6c, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x79, 0x61, 0x6d, 0x6c, 0x12, 0x40, 0x0a,
+	0x10, 0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x5f, 0x74, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65,
+	0x73, 0x18, 0x0b, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x43, 0x61, 0x6e, 0x61, 0x72, 0x79,
+	0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x52, 0x0f,
+	0x6d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x22,
+	0xae, 0x01, 0x0a, 0x14, 0x43, 0x61, 0x6e, 0x61, 0x72, 0x79, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63,
+	0x54, 0x65, 0x6d, 0x70, 0x6c, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x63, 0x6c, 0x75, 0x73,
+	0x74, 0x65, 0x72, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
+	0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e,
+	0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12,
+	0x1c, 0x0a, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x09, 0x6e, 0x61, 0x6d, 0x65, 0x73, 0x70, 0x61, 0x63, 0x65, 0x12, 0x2b, 0x0a,
+	0x08, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x0f, 0x2e, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x50, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72,
+	0x52, 0x08, 0x70, 0x72, 0x6f, 0x76, 0x69, 0x64, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x71, 0x75,
+	0x65, 0x72, 0x79, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x22, 0x91, 0x01, 0x0a, 0x0e, 0x4d, 0x65, 0x74, 0x72, 0x69, 0x63, 0x50, 0x72, 0x6f, 0x76, 0x69,
+	0x64, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x5f, 0x6e, 0x61, 0x6d, 0x65,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x65, 0x63, 0x72, 0x65, 0x74, 0x4e, 0x61,
+	0x6d, 0x65, 0x12, 0x30, 0x0a, 0x14, 0x69, 0x6e, 0x73, 0x65, 0x63, 0x75, 0x72, 0x65, 0x5f, 0x73,
+	0x6b, 0x69, 0x70, 0x5f, 0x76, 0x65, 0x72, 0x69, 0x66, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x12, 0x69, 0x6e, 0x73, 0x65, 0x63, 0x75, 0x72, 0x65, 0x53, 0x6b, 0x69, 0x70, 0x56, 0x65,
+	0x72, 0x69, 0x66, 0x79, 0x42, 0x30, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x77, 0x65, 0x61, 0x76, 0x65, 0x77, 0x6f, 0x72, 0x6b, 0x73, 0x2f, 0x70, 0x72,
+	0x6f, 0x67, 0x72, 0x65, 0x73, 0x73, 0x69, 0x76, 0x65, 0x2d, 0x64, 0x65, 0x6c, 0x69, 0x76, 0x65,
+	0x72, 0x79, 0x2f, 0x61, 0x70, 0x69, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -919,7 +1101,7 @@ func file_api_prog_types_proto_rawDescGZIP() []byte {
 	return file_api_prog_types_proto_rawDescData
 }
 
-var file_api_prog_types_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_api_prog_types_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_api_prog_types_proto_goTypes = []interface{}{
 	(*Pagination)(nil),             // 0: Pagination
 	(*ListError)(nil),              // 1: ListError
@@ -931,19 +1113,23 @@ var file_api_prog_types_proto_goTypes = []interface{}{
 	(*FluxLabels)(nil),             // 7: FluxLabels
 	(*Automation)(nil),             // 8: Automation
 	(*CanaryAnalysis)(nil),         // 9: CanaryAnalysis
+	(*CanaryMetricTemplate)(nil),   // 10: CanaryMetricTemplate
+	(*MetricProvider)(nil),         // 11: MetricProvider
 }
 var file_api_prog_types_proto_depIdxs = []int32{
-	3, // 0: Canary.target_reference:type_name -> CanaryTargetReference
-	6, // 1: Canary.target_deployment:type_name -> CanaryTargetDeployment
-	4, // 2: Canary.status:type_name -> CanaryStatus
-	9, // 3: Canary.analysis:type_name -> CanaryAnalysis
-	5, // 4: CanaryStatus.conditions:type_name -> CanaryCondition
-	7, // 5: CanaryTargetDeployment.flux_labels:type_name -> FluxLabels
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	3,  // 0: Canary.target_reference:type_name -> CanaryTargetReference
+	6,  // 1: Canary.target_deployment:type_name -> CanaryTargetDeployment
+	4,  // 2: Canary.status:type_name -> CanaryStatus
+	9,  // 3: Canary.analysis:type_name -> CanaryAnalysis
+	5,  // 4: CanaryStatus.conditions:type_name -> CanaryCondition
+	7,  // 5: CanaryTargetDeployment.flux_labels:type_name -> FluxLabels
+	10, // 6: CanaryAnalysis.metric_templates:type_name -> CanaryMetricTemplate
+	11, // 7: CanaryMetricTemplate.provider:type_name -> MetricProvider
+	8,  // [8:8] is the sub-list for method output_type
+	8,  // [8:8] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_api_prog_types_proto_init() }
@@ -1072,6 +1258,30 @@ func file_api_prog_types_proto_init() {
 				return nil
 			}
 		}
+		file_api_prog_types_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CanaryMetricTemplate); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_api_prog_types_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MetricProvider); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1079,7 +1289,7 @@ func file_api_prog_types_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_api_prog_types_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

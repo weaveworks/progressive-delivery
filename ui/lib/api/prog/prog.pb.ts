@@ -42,6 +42,17 @@ export type IsFlaggerAvailableResponse = {
   clusters?: {[key: string]: boolean}
 }
 
+export type ListMetricTemplatesRequest = {
+  clusterName?: string
+  pagination?: Types.Pagination
+}
+
+export type ListMetricTemplatesResponse = {
+  templates?: Types.CanaryMetricTemplate[]
+  nextPageToken?: string
+  errors?: Types.ListError[]
+}
+
 export class ProgressiveDeliveryService {
   static GetVersion(req: GetVersionRequest, initReq?: fm.InitReq): Promise<GetVersionResponse> {
     return fm.fetchReq<GetVersionRequest, GetVersionResponse>(`/v1/pd/version?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
@@ -54,5 +65,8 @@ export class ProgressiveDeliveryService {
   }
   static IsFlaggerAvailable(req: IsFlaggerAvailableRequest, initReq?: fm.InitReq): Promise<IsFlaggerAvailableResponse> {
     return fm.fetchReq<IsFlaggerAvailableRequest, IsFlaggerAvailableResponse>(`/v1/pd/crd/flagger?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+  }
+  static ListMetricTemplates(req: ListMetricTemplatesRequest, initReq?: fm.InitReq): Promise<ListMetricTemplatesResponse> {
+    return fm.fetchReq<ListMetricTemplatesRequest, ListMetricTemplatesResponse>(`/v1/pd/metric_templates?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
 }

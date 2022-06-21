@@ -126,6 +126,50 @@
         ]
       }
     },
+    "/v1/pd/metric_templates": {
+      "get": {
+        "summary": "ListCanaries returns with a list of Canary objects.",
+        "operationId": "ProgressiveDeliveryService_ListMetricTemplates",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ListMetricTemplatesResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "clusterName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pagination.pageSize",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "pagination.pageToken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
     "/v1/pd/version": {
       "get": {
         "operationId": "ProgressiveDeliveryService_GetVersion",
@@ -241,6 +285,12 @@
         },
         "yaml": {
           "type": "string"
+        },
+        "metricTemplates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CanaryMetricTemplate"
+          }
         }
       }
     },
@@ -263,6 +313,26 @@
           "type": "string"
         },
         "message": {
+          "type": "string"
+        }
+      }
+    },
+    "CanaryMetricTemplate": {
+      "type": "object",
+      "properties": {
+        "clusterName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "provider": {
+          "$ref": "#/definitions/MetricProvider"
+        },
+        "query": {
           "type": "string"
         }
       }
@@ -393,6 +463,43 @@
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "ListMetricTemplatesResponse": {
+      "type": "object",
+      "properties": {
+        "templates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CanaryMetricTemplate"
+          }
+        },
+        "nextPageToken": {
+          "type": "string"
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListError"
+          }
+        }
+      }
+    },
+    "MetricProvider": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "secretName": {
+          "type": "string"
+        },
+        "insecureSkipVerify": {
+          "type": "boolean"
         }
       }
     },
