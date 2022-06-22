@@ -13,10 +13,12 @@ import (
 )
 
 type Fetcher interface {
-	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
-	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
-	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
 	DeploymentStrategyFor(canary v1beta1.Canary) DeploymentStrategy
+	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
+	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
+	GetMetricTemplate(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, name, namespace string) (v1beta1.MetricTemplate, error)
+	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
+	ListMetricTemplates(ctx context.Context, clusterClient clustersmngr.Client, options ListMetricTemplatesOptions) (map[string][]v1beta1.MetricTemplate, string, []MetricTemplateListError, error)
 }
 
 func NewFetcher(crdService crd.Fetcher) Fetcher {
@@ -30,6 +32,12 @@ type defaultFetcher struct {
 }
 
 type ListCanaryDeploymentsOptions struct {
+	Namespace string
+	PageSize  int32
+	PageToken string
+}
+
+type ListMetricTemplatesOptions struct {
 	Namespace string
 	PageSize  int32
 	PageToken string
@@ -126,6 +134,24 @@ func (service *defaultFetcher) GetCanary(
 	return k, nil
 }
 
+func (service *defaultFetcher) GetMetricTemplate(
+	ctx context.Context,
+	clusterName string,
+	clusterClient clustersmngr.Client,
+	name, namespace string,
+) (v1beta1.MetricTemplate, error) {
+	object := v1beta1.MetricTemplate{}
+
+	key := client.ObjectKey{
+		Name:      name,
+		Namespace: namespace,
+	}
+
+	err := clusterClient.Get(ctx, clusterName, key, &object)
+
+	return object, err
+}
+
 func (service *defaultFetcher) FetchTargetRef(
 	ctx context.Context,
 	clusterName string,
@@ -142,4 +168,71 @@ func (service *defaultFetcher) FetchTargetRef(
 	err := clusterClient.Get(ctx, clusterName, key, &deployment)
 
 	return deployment, err
+}
+
+func (service *defaultFetcher) ListMetricTemplates(
+	ctx context.Context,
+	clusterClient clustersmngr.Client,
+	options ListMetricTemplatesOptions,
+) (map[string][]v1beta1.MetricTemplate, string, []MetricTemplateListError, error) {
+	var respErrors []MetricTemplateListError
+
+	clist := clustersmngr.NewClusteredList(func() client.ObjectList {
+		return &v1beta1.MetricTemplateList{}
+	})
+
+	opts := []client.ListOption{}
+	if options.PageSize != 0 {
+		opts = append(opts, client.Limit(options.PageSize))
+	}
+
+	if options.PageToken != "" {
+		opts = append(opts, client.Continue(options.PageToken))
+	}
+
+	if err := clusterClient.ClusteredList(ctx, clist, true, opts...); err != nil {
+		var errs clustersmngr.ClusteredListError
+		if !errors.As(err, &errs) {
+			return nil, "", respErrors, err
+		}
+
+		for _, e := range errs.Errors {
+			// If flagger is not installed, skip all errors reported from that
+			// cluster, an extra error will be appended to the error list later if
+			// Flagger is not available.
+			if service.crdService.IsAvailable(e.Cluster, crd.FlaggerCRDName) {
+				respErrors = append(respErrors, MetricTemplateListError{ClusterName: e.Cluster, Err: e.Err})
+			}
+		}
+	}
+
+	results := map[string][]v1beta1.MetricTemplate{}
+
+	for clusterName, lists := range clist.Lists() {
+		// The error will be in there from ClusteredListError, adding an extra
+		// error so it's easier to check them on client side.
+		if !service.crdService.IsAvailable(clusterName, crd.FlaggerCRDName) {
+			respErrors = append(
+				respErrors,
+				MetricTemplateListError{
+					ClusterName: clusterName,
+					Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
+				},
+			)
+			results[clusterName] = []v1beta1.MetricTemplate{}
+
+			continue
+		}
+
+		for _, l := range lists {
+			list, ok := l.(*v1beta1.MetricTemplateList)
+			if !ok {
+				continue
+			}
+
+			results[clusterName] = append(results[clusterName], list.Items...)
+		}
+	}
+
+	return results, clist.GetContinue(), respErrors, nil
 }

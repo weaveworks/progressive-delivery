@@ -72,3 +72,24 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		Yaml: string(canaryYaml),
 	}
 }
+
+func FlaggerMetricTemplateToProto(template v1beta1.MetricTemplate, clusterName string) *pb.CanaryMetricTemplate {
+	secretName := ""
+
+	if template.Spec.Provider.SecretRef != nil {
+		secretName = template.Spec.Provider.SecretRef.Name
+	}
+
+	return &pb.CanaryMetricTemplate{
+		ClusterName: clusterName,
+		Name:        template.GetName(),
+		Namespace:   template.GetNamespace(),
+		Query:       template.Spec.Query,
+		Provider: &pb.MetricProvider{
+			Type:               template.Spec.Provider.Type,
+			Address:            template.Spec.Provider.Address,
+			SecretName:         secretName,
+			InsecureSkipVerify: template.Spec.Provider.InsecureSkipVerify,
+		},
+	}
+}

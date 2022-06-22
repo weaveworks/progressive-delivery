@@ -78,4 +78,20 @@ export type CanaryAnalysis = {
   stepWeights?: number[]
   mirror?: boolean
   yaml?: string
+  metricTemplates?: CanaryMetricTemplate[]
+}
+
+export type CanaryMetricTemplate = {
+  clusterName?: string
+  name?: string
+  namespace?: string
+  provider?: MetricProvider
+  query?: string
+}
+
+export type MetricProvider = {
+  type?: string
+  address?: string
+  secretName?: string
+  insecureSkipVerify?: boolean
 }

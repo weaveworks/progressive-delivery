@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	api "github.com/weaveworks/progressive-delivery/pkg/api/prog"
@@ -21,9 +22,12 @@ func TestListCanaries(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	ns := newNamespace(ctx, t, k)
+	ns := pdtesting.NewNamespace(ctx, t, k)
 
-	newCanary(ctx, t, k, "example", ns.Name)
+	_ = pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
+		Name:      "example",
+		Namespace: ns.GetName(),
+	})
 
 	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
 	assert.NoError(t, err)
@@ -47,10 +51,29 @@ func TestGetCanary(t *testing.T) {
 
 	appName := "example"
 
-	ns := newNamespace(ctx, t, k)
-
-	_ = newDeployment(ctx, t, k, appName, ns.Name)
-	canary := newCanary(ctx, t, k, appName, ns.Name)
+	ns := pdtesting.NewNamespace(ctx, t, k)
+	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
+	tpl := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+		Name:            appName,
+		Namespace:       ns.GetName(),
+		ProviderType:    "prometheus",
+		ProviderAddress: "http://prometheus:9090",
+		Query:           "custom query",
+	})
+	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
+		Name:      appName,
+		Namespace: ns.GetName(),
+		Metrics: []v1beta1.CanaryMetric{
+			{
+				TemplateRef: &v1beta1.CrossNamespaceObjectReference{
+					APIVersion: "flagger.app/v1beta1",
+					Kind:       "MetricTemplate",
+					Name:       tpl.GetName(),
+					Namespace:  ns.GetName(),
+				},
+			},
+		},
+	})
 
 	response, err := c.GetCanary(ctx, &api.GetCanaryRequest{ClusterName: "Default", Name: canary.Name, Namespace: canary.Namespace})
 	assert.NoError(t, err)
@@ -62,6 +85,11 @@ func TestGetCanary(t *testing.T) {
 	assert.Equal(t,
 		string(flagger.BlueGreenDeploymentStrategy),
 		response.GetCanary().GetDeploymentStrategy(),
+	)
+	assert.NotEmpty(t, response.GetCanary().GetAnalysis().GetMetricTemplates())
+	assert.Equal(t,
+		response.GetCanary().GetAnalysis().GetMetricTemplates()[0].GetName(),
+		tpl.GetName(),
 	)
 }
 

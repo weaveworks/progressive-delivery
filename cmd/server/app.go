@@ -94,6 +94,7 @@ func serve(cfg *appConfig) error {
 	opts := server.ServerOpts{
 		ClientFactory: clientsFactory,
 		CRDService:    crd.NewNoCacheFetcher(clientsFactory),
+		Logger:        cfg.Logger,
 	}
 
 	pdServer, _ := server.NewProgressiveDeliveryServer(opts)

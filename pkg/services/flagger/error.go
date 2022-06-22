@@ -18,3 +18,12 @@ type CanaryListError struct {
 func (e CanaryListError) Error() string {
 	return fmt.Sprintf("canary list error on cluster %s: %s", e.ClusterName, e.Err.Error())
 }
+
+type MetricTemplateListError struct {
+	ClusterName string
+	Err         error
+}
+
+func (e MetricTemplateListError) Error() string {
+	return fmt.Sprintf("metric template list error on cluster %s: %s", e.ClusterName, e.Err.Error())
+}

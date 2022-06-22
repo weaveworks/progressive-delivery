@@ -31,10 +31,16 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 		return nil, fmt.Errorf("error getting impersonated client: %w", err)
 	}
 
+	opts := flagger.ListCanaryDeploymentsOptions{}
+	if msg.Pagination != nil {
+		opts.PageSize = msg.Pagination.PageSize
+		opts.PageToken = msg.Pagination.PageToken
+	}
+
 	results, nextPageToken, listErr, err := pd.flagger.ListCanaryDeployments(
 		ctx,
 		clusterClient,
-		flagger.ListCanaryDeploymentsOptions{},
+		opts,
 	)
 	if err != nil {
 		return nil, err
@@ -95,10 +101,78 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment)
 
 	pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(*canary))
+	pbObject.Analysis.MetricTemplates = []*pb.CanaryMetricTemplate{}
+
+	for _, item := range canary.GetAnalysis().Metrics {
+		if item.TemplateRef != nil {
+			template, err := pd.flagger.GetMetricTemplate(
+				ctx,
+				msg.ClusterName,
+				clusterClient,
+				item.TemplateRef.Name,
+				item.TemplateRef.Namespace,
+			)
+			if err != nil {
+				pd.logger.Error(err, "unable to fetch metric template from reference")
+
+				continue
+			}
+
+			pbObject.Analysis.MetricTemplates = append(
+				pbObject.Analysis.MetricTemplates,
+				convert.FlaggerMetricTemplateToProto(template, msg.ClusterName),
+			)
+		}
+	}
 
 	response := &pb.GetCanaryResponse{
 		Canary:     pbObject,
 		Automation: getAutomation(deployment),
+	}
+
+	return response, nil
+}
+
+func (pd *pdServer) ListMetricTemplates(ctx context.Context, msg *pb.ListMetricTemplatesRequest) (*pb.ListMetricTemplatesResponse, error) {
+	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	if err != nil {
+		return nil, fmt.Errorf("error getting impersonated client: %w", err)
+	}
+
+	opts := flagger.ListMetricTemplatesOptions{}
+	if msg.Pagination != nil {
+		opts.PageSize = msg.Pagination.PageSize
+		opts.PageToken = msg.Pagination.PageToken
+	}
+
+	results, nextPageToken, listErr, err := pd.flagger.ListMetricTemplates(
+		ctx,
+		clusterClient,
+		opts,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &pb.ListMetricTemplatesResponse{
+		Templates:     []*pb.CanaryMetricTemplate{},
+		NextPageToken: nextPageToken,
+		Errors:        []*pb.ListError{},
+	}
+
+	for _, err := range listErr {
+		response.Errors = append(response.Errors, &pb.ListError{
+			ClusterName: err.ClusterName,
+			Namespace:   "",
+			Message:     err.Error(),
+		})
+	}
+
+	for clusterName, list := range results {
+		for _, item := range list {
+			pbObject := convert.FlaggerMetricTemplateToProto(item, clusterName)
+			response.Templates = append(response.Templates, pbObject)
+		}
 	}
 
 	return response, nil
