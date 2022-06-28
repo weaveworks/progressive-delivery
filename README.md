@@ -14,6 +14,21 @@ Use Tilt to deploy the dev-server on the cluster:
 make dev-cluster
 ```
 
+To install extra resources, use the `./tools/install-resources.sh` script:
+
+```bash
+❯ ./tools/install-resources.sh -h
+usage: ./tools/install-resources.sh [-i] [-f] [-c]
+
+Install extra resources.
+
+OPTIONS:
+   -c|--canaries     Install Canary objects
+   -f|--flagger      Install Flagger
+   -i|--istio        Install Istio
+   -h|--help         Show this message
+```
+
 Use ea gRPC client to interact with the API, for example:
 
 * [BloomRPC](https://github.com/bloomrpc/bloomrpc) has a nice GUI.
