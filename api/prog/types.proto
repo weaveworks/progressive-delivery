@@ -53,6 +53,7 @@ message CanaryTargetDeployment {
   string uid = 1;
   string resource_version = 2;
   FluxLabels flux_labels = 3;
+  map <string, string> image_versions = 4;
 }
 
 message FluxLabels {

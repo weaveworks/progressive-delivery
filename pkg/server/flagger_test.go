@@ -24,8 +24,12 @@ func TestListCanaries(t *testing.T) {
 
 	ns := pdtesting.NewNamespace(ctx, t, k)
 
+	appName := "my-app"
+
+	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
+
 	_ = pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
-		Name:      "example",
+		Name:      appName,
 		Namespace: ns.GetName(),
 	})
 
@@ -38,6 +42,12 @@ func TestListCanaries(t *testing.T) {
 		string(flagger.BlueGreenDeploymentStrategy),
 		response.GetCanaries()[0].GetDeploymentStrategy(),
 	)
+
+	expectedImages := map[string]string{
+		"nginx": "nginx",
+	}
+
+	assert.Equal(t, expectedImages, response.Canaries[0].TargetDeployment.ImageVersions)
 }
 
 func TestGetCanary(t *testing.T) {

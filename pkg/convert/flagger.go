@@ -32,6 +32,12 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 	canaryYaml, _ := yaml.Marshal(canary)
 	analysisYaml, _ := yaml.Marshal(canary.Spec.Analysis)
 
+	images := map[string]string{}
+
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		images[container.Name] = container.Image
+	}
+
 	return &pb.Canary{
 		Name:        canary.GetName(),
 		Namespace:   canary.GetNamespace(),
@@ -45,6 +51,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 			Uid:             string(deployment.GetObjectMeta().GetUID()),
 			ResourceVersion: deployment.GetObjectMeta().GetResourceVersion(),
 			FluxLabels:      fluxLabels,
+			ImageVersions:   images,
 		},
 		Analysis: &pb.CanaryAnalysis{
 			Interval:            canary.Spec.Analysis.Interval,
