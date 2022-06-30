@@ -54,7 +54,8 @@ export type CanaryTargetDeployment = {
   uid?: string
   resourceVersion?: string
   fluxLabels?: FluxLabels
-  imageVersions?: {[key: string]: string}
+  appliedImageVersions?: {[key: string]: string}
+  promotedImageVersions?: {[key: string]: string}
 }
 
 export type FluxLabels = {

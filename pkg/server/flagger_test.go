@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
@@ -28,10 +29,11 @@ func TestListCanaries(t *testing.T) {
 
 	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
 
-	_ = pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
+	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
 		Name:      appName,
 		Namespace: ns.GetName(),
 	})
+	defer cleanup(ctx, t, k, &canary)
 
 	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
 	assert.NoError(t, err)
@@ -46,8 +48,76 @@ func TestListCanaries(t *testing.T) {
 	expectedImages := map[string]string{
 		"nginx": "nginx",
 	}
+	assert.Equal(t, expectedImages, response.Canaries[0].TargetDeployment.AppliedImageVersions)
 
-	assert.Equal(t, expectedImages, response.Canaries[0].TargetDeployment.ImageVersions)
+	assert.Empty(t, response.Canaries[0].TargetDeployment.PromotedImageVersions)
+}
+
+func TestListCanaries_NoDeployment(t *testing.T) {
+	ctx := context.Background()
+	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
+
+	k, err := client.New(k8sEnv.Rest, client.Options{
+		Scheme: server.CreateScheme(),
+	})
+	assert.NoError(t, err)
+
+	ns := pdtesting.NewNamespace(ctx, t, k)
+
+	appName := "no-dep"
+
+	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
+		Name:      appName,
+		Namespace: ns.GetName(),
+	})
+	defer cleanup(ctx, t, k, &canary)
+
+	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
+	assert.NoError(t, err)
+
+	assert.Len(t, response.GetCanaries(), 1, "should return one canary object")
+	assert.Empty(t, response.GetErrors(), "should not return with errors")
+
+	assert.Empty(t, response.Canaries[0].TargetDeployment.AppliedImageVersions)
+}
+
+func TestListCanaries_Promoted(t *testing.T) {
+	ctx := context.Background()
+	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
+
+	k, err := client.New(k8sEnv.Rest, client.Options{
+		Scheme: server.CreateScheme(),
+	})
+	assert.NoError(t, err)
+
+	ns := pdtesting.NewNamespace(ctx, t, k)
+
+	appName := "with-promoted"
+
+	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
+	_ = pdtesting.NewDeployment(ctx, t, k, fmt.Sprintf("%s-primary", appName), ns.Name)
+
+	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
+		Name:      appName,
+		Namespace: ns.GetName(),
+	})
+	defer cleanup(ctx, t, k, &canary)
+
+	response, err := c.ListCanaries(ctx, &api.ListCanariesRequest{})
+	assert.NoError(t, err)
+
+	assert.Len(t, response.GetCanaries(), 1, "should return one canary object")
+	assert.Empty(t, response.GetErrors(), "should not return with errors")
+
+	expectedImages := map[string]string{
+		"nginx": "nginx",
+	}
+	assert.Equal(t, expectedImages, response.Canaries[0].TargetDeployment.AppliedImageVersions)
+
+	expectedPromoted := map[string]string{
+		"nginx": "nginx",
+	}
+	assert.Equal(t, expectedPromoted, response.Canaries[0].TargetDeployment.PromotedImageVersions)
 }
 
 func TestGetCanary(t *testing.T) {
@@ -63,6 +133,8 @@ func TestGetCanary(t *testing.T) {
 
 	ns := pdtesting.NewNamespace(ctx, t, k)
 	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
+	_ = pdtesting.NewDeployment(ctx, t, k, fmt.Sprintf("%s-primary", appName), ns.Name)
+
 	tpl := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
 		Name:            appName,
 		Namespace:       ns.GetName(),
@@ -84,6 +156,7 @@ func TestGetCanary(t *testing.T) {
 			},
 		},
 	})
+	defer cleanup(ctx, t, k, &canary)
 
 	response, err := c.GetCanary(ctx, &api.GetCanaryRequest{ClusterName: "Default", Name: canary.Name, Namespace: canary.Namespace})
 	assert.NoError(t, err)
@@ -111,4 +184,10 @@ func TestIsFlaggerAvailable(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Len(t, response.GetClusters(), 1)
+}
+
+func cleanup(ctx context.Context, t *testing.T, k client.Client, obj client.Object) {
+	if err := k.Delete(ctx, obj); err != nil {
+		t.Error(err)
+	}
 }

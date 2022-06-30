@@ -378,7 +378,13 @@
         "fluxLabels": {
           "$ref": "#/definitions/FluxLabels"
         },
-        "imageVersions": {
+        "appliedImageVersions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "promotedImageVersions": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
