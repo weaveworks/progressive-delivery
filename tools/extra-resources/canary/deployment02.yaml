@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment01
+  namespace: canary
+  labels:
+    app: deployment01
+spec:
+  minReadySeconds: 5
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 60
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: deployment01
+  template:
+    metadata:
+      labels:
+        app: deployment01
+    spec:
+      containers:
+      - name: app
+        image: ghcr.io/yitsushi/hello-world:1.0.7
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 9999
+          protocol: TCP
+        env:
+        - name: LISTEN
+          value: ":9999"
+        livenessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /
+            port: 9999
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            scheme: HTTP
+            path: /
+            port: 9999
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi

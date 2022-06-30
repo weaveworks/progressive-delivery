@@ -5,9 +5,9 @@ image_repository = os.getenv('IMAGE_REPO', 'localhost:5001/weaveworks/progressiv
 load('ext://restart_process', 'docker_build_with_restart')
 
 docker_build(
-    image_repository,
-    '.',
-    dockerfile="tools/tilt/dev-server.dockerfile",
+  image_repository,
+  '.',
+  dockerfile="tools/tilt/dev-server.dockerfile",
 )
 
 k8s_yaml('tools/tilt/service-account.yaml')
