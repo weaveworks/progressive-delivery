@@ -67,7 +67,10 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 			// with an empty deployment.
 			deployment, _ := pd.flagger.FetchTargetRef(ctx, clusterName, clusterClient, &item)
 
-			pbObject := convert.FlaggerCanaryToProto(item, clusterName, deployment)
+			promoted, _ := pd.flagger.FetchPromoted(ctx, clusterName, clusterClient, &item)
+
+			containers := promoted.Spec.Template.Spec.Containers
+			pbObject := convert.FlaggerCanaryToProto(item, clusterName, deployment, containers)
 
 			pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(item))
 
@@ -90,15 +93,21 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 		ClusterName: msg.ClusterName,
 	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("getting canary: %w", err)
 	}
 
 	deployment, err := pd.flagger.FetchTargetRef(ctx, msg.ClusterName, clusterClient, canary)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fetching target ref: %w", err)
 	}
 
-	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment)
+	promoted, err := pd.flagger.FetchPromoted(ctx, msg.ClusterName, clusterClient, canary)
+	if err != nil {
+		return nil, fmt.Errorf("fetching target ref: %w", err)
+	}
+
+	containers := promoted.Spec.Template.Spec.Containers
+	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment, containers)
 
 	pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(*canary))
 	pbObject.Analysis.MetricTemplates = []*pb.CanaryMetricTemplate{}

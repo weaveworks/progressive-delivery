@@ -377,6 +377,18 @@
         },
         "fluxLabels": {
           "$ref": "#/definitions/FluxLabels"
+        },
+        "appliedImageVersions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "promotedImageVersions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },

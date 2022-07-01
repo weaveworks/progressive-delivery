@@ -7,10 +7,11 @@ import (
 	"github.com/go-asset/generics/list"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"gopkg.in/yaml.v3"
-	v1 "k8s.io/api/apps/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
-func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment v1.Deployment) *pb.Canary {
+func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment appsv1.Deployment, promoted []v1.Container) *pb.Canary {
 	conditions := []*pb.CanaryCondition{}
 
 	for _, condition := range canary.Status.Conditions {
@@ -32,6 +33,18 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 	canaryYaml, _ := yaml.Marshal(canary)
 	analysisYaml, _ := yaml.Marshal(canary.Spec.Analysis)
 
+	images := map[string]string{}
+
+	for _, container := range deployment.Spec.Template.Spec.Containers {
+		images[container.Name] = container.Image
+	}
+
+	promotedImages := map[string]string{}
+
+	for _, c := range promoted {
+		promotedImages[c.Name] = c.Image
+	}
+
 	return &pb.Canary{
 		Name:        canary.GetName(),
 		Namespace:   canary.GetNamespace(),
@@ -42,9 +55,11 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 			Name: canary.Spec.TargetRef.Name,
 		},
 		TargetDeployment: &pb.CanaryTargetDeployment{
-			Uid:             string(deployment.GetObjectMeta().GetUID()),
-			ResourceVersion: deployment.GetObjectMeta().GetResourceVersion(),
-			FluxLabels:      fluxLabels,
+			Uid:                   string(deployment.GetObjectMeta().GetUID()),
+			ResourceVersion:       deployment.GetObjectMeta().GetResourceVersion(),
+			FluxLabels:            fluxLabels,
+			AppliedImageVersions:  images,
+			PromotedImageVersions: promotedImages,
 		},
 		Analysis: &pb.CanaryAnalysis{
 			Interval:            canary.Spec.Analysis.Interval,

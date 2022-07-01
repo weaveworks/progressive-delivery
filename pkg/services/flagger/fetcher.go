@@ -15,6 +15,7 @@ import (
 type Fetcher interface {
 	DeploymentStrategyFor(canary v1beta1.Canary) DeploymentStrategy
 	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
+	FetchPromoted(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
 	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
 	GetMetricTemplate(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, name, namespace string) (v1beta1.MetricTemplate, error)
 	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
@@ -158,16 +159,17 @@ func (service *defaultFetcher) FetchTargetRef(
 	clusterClient clustersmngr.Client,
 	canary *v1beta1.Canary,
 ) (v1.Deployment, error) {
-	deployment := v1.Deployment{}
+	return getDeployment(ctx, clusterName, clusterClient, canary.Spec.TargetRef.Name, canary.GetNamespace())
+}
 
-	key := client.ObjectKey{
-		Name:      canary.Spec.TargetRef.Name,
-		Namespace: canary.GetNamespace(),
-	}
-
-	err := clusterClient.Get(ctx, clusterName, key, &deployment)
-
-	return deployment, err
+func (service *defaultFetcher) FetchPromoted(
+	ctx context.Context,
+	clusterName string,
+	clusterClient clustersmngr.Client,
+	canary *v1beta1.Canary,
+) (v1.Deployment, error) {
+	name := fmt.Sprintf("%s-primary", canary.Spec.TargetRef.Name)
+	return getDeployment(ctx, clusterName, clusterClient, name, canary.GetNamespace())
 }
 
 func (service *defaultFetcher) ListMetricTemplates(
@@ -235,4 +237,17 @@ func (service *defaultFetcher) ListMetricTemplates(
 	}
 
 	return results, clist.GetContinue(), respErrors, nil
+}
+
+func getDeployment(ctx context.Context, clusterName string, c clustersmngr.Client, name string, namespace string) (v1.Deployment, error) {
+	deployment := v1.Deployment{}
+
+	key := client.ObjectKey{
+		Name:      name,
+		Namespace: namespace,
+	}
+
+	err := c.Get(ctx, clusterName, key, &deployment)
+
+	return deployment, err
 }
