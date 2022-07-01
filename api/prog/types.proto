@@ -94,3 +94,31 @@ message MetricProvider {
   string secret_name = 4;
   bool insecure_skip_verify = 3;
 }
+
+// GroupVersionKind represents an objects Kubernetes API type data
+message GroupVersionKind {
+    string group   = 1;
+    string kind    = 2;
+    string version = 3;
+}
+
+// UnstructuredObject is a Kubernetes object of an unknown type
+message UnstructuredObject {
+    GroupVersionKind groupVersionKind     = 1;
+    string           name                 = 2;
+    string           namespace            = 3;
+    string           uid                  = 4;
+    string           status               = 5;
+    repeated         Condition conditions = 6;
+    bool             suspended            = 7;
+    string           clusterName          = 8;
+    repeated         string images        = 9;
+}
+
+message Condition {
+    string type = 1;
+    string status = 2;
+    string reason = 3;
+    string message = 4;
+    string timestamp = 5;
+}

@@ -33,6 +33,10 @@ type ProgressiveDeliveryServiceClient interface {
 	//
 	// ListCanaries returns with a list of Canary objects.
 	ListMetricTemplates(ctx context.Context, in *ListMetricTemplatesRequest, opts ...grpc.CallOption) (*ListMetricTemplatesResponse, error)
+	//
+	// ListFlaggerObjcets returns with a list of related objects for a Canary
+	// objects.
+	ListFlaggerObjects(ctx context.Context, in *ListFlaggerObjectsRequest, opts ...grpc.CallOption) (*ListFlaggerObjectsResponse, error)
 }
 
 type progressiveDeliveryServiceClient struct {
@@ -88,6 +92,15 @@ func (c *progressiveDeliveryServiceClient) ListMetricTemplates(ctx context.Conte
 	return out, nil
 }
 
+func (c *progressiveDeliveryServiceClient) ListFlaggerObjects(ctx context.Context, in *ListFlaggerObjectsRequest, opts ...grpc.CallOption) (*ListFlaggerObjectsResponse, error) {
+	out := new(ListFlaggerObjectsResponse)
+	err := c.cc.Invoke(ctx, "/ProgressiveDeliveryService/ListFlaggerObjects", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProgressiveDeliveryServiceServer is the server API for ProgressiveDeliveryService service.
 // All implementations must embed UnimplementedProgressiveDeliveryServiceServer
 // for forward compatibility
@@ -107,6 +120,10 @@ type ProgressiveDeliveryServiceServer interface {
 	//
 	// ListCanaries returns with a list of Canary objects.
 	ListMetricTemplates(context.Context, *ListMetricTemplatesRequest) (*ListMetricTemplatesResponse, error)
+	//
+	// ListFlaggerObjcets returns with a list of related objects for a Canary
+	// objects.
+	ListFlaggerObjects(context.Context, *ListFlaggerObjectsRequest) (*ListFlaggerObjectsResponse, error)
 	mustEmbedUnimplementedProgressiveDeliveryServiceServer()
 }
 
@@ -128,6 +145,9 @@ func (UnimplementedProgressiveDeliveryServiceServer) IsFlaggerAvailable(context.
 }
 func (UnimplementedProgressiveDeliveryServiceServer) ListMetricTemplates(context.Context, *ListMetricTemplatesRequest) (*ListMetricTemplatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListMetricTemplates not implemented")
+}
+func (UnimplementedProgressiveDeliveryServiceServer) ListFlaggerObjects(context.Context, *ListFlaggerObjectsRequest) (*ListFlaggerObjectsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFlaggerObjects not implemented")
 }
 func (UnimplementedProgressiveDeliveryServiceServer) mustEmbedUnimplementedProgressiveDeliveryServiceServer() {
 }
@@ -233,6 +253,24 @@ func _ProgressiveDeliveryService_ListMetricTemplates_Handler(srv interface{}, ct
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProgressiveDeliveryService_ListFlaggerObjects_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFlaggerObjectsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProgressiveDeliveryServiceServer).ListFlaggerObjects(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ProgressiveDeliveryService/ListFlaggerObjects",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProgressiveDeliveryServiceServer).ListFlaggerObjects(ctx, req.(*ListFlaggerObjectsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProgressiveDeliveryService_ServiceDesc is the grpc.ServiceDesc for ProgressiveDeliveryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -259,6 +297,10 @@ var ProgressiveDeliveryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListMetricTemplates",
 			Handler:    _ProgressiveDeliveryService_ListMetricTemplates_Handler,
+		},
+		{
+			MethodName: "ListFlaggerObjects",
+			Handler:    _ProgressiveDeliveryService_ListFlaggerObjects_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
