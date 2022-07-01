@@ -8,7 +8,7 @@ rules:
     resources: ["users", "groups"] 
     verbs: [ "impersonate" ]
   - apiGroups: [ "" ]
-    resources: [ "namespaces" ]
+    resources: [ "namespaces", "services" ]
     verbs: [ "get", "list" ]
   - apiGroups: [ "flagger.app" ]
     resources: [ "*" ]
@@ -17,6 +17,9 @@ rules:
     resources: [ "customresourcedefinitions" ]
     verbs: [ "get", "list" ]
   - apiGroups: [ "apps" ]
+    resources: [ "*" ]
+    verbs: [ "get", "list" ]
+  - apiGroups: [ "autoscaling" ]
     resources: [ "*" ]
     verbs: [ "get", "list" ]
 ---

@@ -51,6 +51,17 @@ service ProgressiveDeliveryService {
             get : "/v1/pd/metric_templates",
         };
     }
+
+
+    /**
+    * ListFlaggerObjcets returns with a list of related objects for a Canary
+    * objects.
+    */
+    rpc ListFlaggerObjects(ListFlaggerObjectsRequest) returns (ListFlaggerObjectsResponse) {
+        option (google.api.http) = {
+            get : "/v1/pd/canary_objects",
+        };
+    }
 }
 
 message GetVersionRequest {}
@@ -97,4 +108,16 @@ message ListMetricTemplatesResponse {
     repeated CanaryMetricTemplate templates = 1;
     string nextPage_token = 2;
     repeated ListError errors = 3;
+}
+
+message ListFlaggerObjectsRequest {
+    string name = 1;
+    string namespace = 2;
+    string cluster_name = 3;
+    repeated GroupVersionKind kinds = 4;
+
+}
+
+message ListFlaggerObjectsResponse {
+    repeated UnstructuredObject objects = 1;
 }

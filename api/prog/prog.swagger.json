@@ -103,6 +103,49 @@
         ]
       }
     },
+    "/v1/pd/canary_objects": {
+      "get": {
+        "summary": "ListFlaggerObjcets returns with a list of related objects for a Canary\nobjects.",
+        "operationId": "ProgressiveDeliveryService_ListFlaggerObjects",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/ListFlaggerObjectsResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
     "/v1/pd/crd/flagger": {
       "get": {
         "summary": "IsFlaggerAvailable returns with a hashmap where the keys are the names of\nthe clusters, and the value is a boolean indicating whether Flagger is\ninstalled or not on that cluster.",
@@ -403,6 +446,26 @@
         }
       }
     },
+    "Condition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      }
+    },
     "FluxLabels": {
       "type": "object",
       "properties": {
@@ -432,6 +495,21 @@
           "type": "string"
         }
       }
+    },
+    "GroupVersionKind": {
+      "type": "object",
+      "properties": {
+        "group": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "title": "GroupVersionKind represents an objects Kubernetes API type data"
     },
     "IsFlaggerAvailableResponse": {
       "type": "object",
@@ -475,6 +553,17 @@
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "ListFlaggerObjectsResponse": {
+      "type": "object",
+      "properties": {
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnstructuredObject"
+          }
         }
       }
     },
@@ -526,6 +615,45 @@
           "type": "string"
         }
       }
+    },
+    "UnstructuredObject": {
+      "type": "object",
+      "properties": {
+        "groupVersionKind": {
+          "$ref": "#/definitions/GroupVersionKind"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "conditions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Condition"
+          }
+        },
+        "suspended": {
+          "type": "boolean"
+        },
+        "clusterName": {
+          "type": "string"
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "UnstructuredObject is a Kubernetes object of an unknown type"
     },
     "protobufAny": {
       "type": "object",
