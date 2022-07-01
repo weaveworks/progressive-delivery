@@ -82,6 +82,8 @@ func (pd *pdServer) ListFlaggerObjects(ctx context.Context, msg *pb.ListFlaggerO
 
 		if err := clusterClient.List(ctx, msg.ClusterName, &listResult); err != nil {
 			if k8serrors.IsForbidden(err) {
+				pd.logger.Error(err, "request is forbidden")
+
 				continue
 			}
 
@@ -94,12 +96,6 @@ func (pd *pdServer) ListFlaggerObjects(ctx context.Context, msg *pb.ListFlaggerO
 			if len(refs) == 0 {
 				continue
 			}
-
-			pd.logger.Info("item",
-				"name", obj.GetName(),
-				"refs", obj.GetOwnerReferences()[0].UID,
-				"parent", canary.GetUID(),
-			)
 
 			for _, ref := range refs {
 				if ref.UID != canary.GetUID() {
