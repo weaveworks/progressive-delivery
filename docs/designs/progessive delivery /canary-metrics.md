@@ -15,9 +15,12 @@ Examples of the user stories used in this design are:
   the canary analysis for a new version of my application, by clicking the "Analysis" tab. See Fig 1.
 - As a user, I can see which metric checks have been configured - their name, their namespace, the threshold minimum, t
   the threshold maximum, and the interval, in a sortable-by-column table.
+- As a user, when seeing a metric defined using a custom metric template, I can discover how this is configured 
+  as the name of the metric becomes a hyperlink which when clicked, opens a modal view showing me the yaml for the relevant metric template object.
 
 ##  Proposed Solution (What / How)
 
+[Board](https://miro.com/app/board/uXjVOoAPntE=/?share_link_id=505858014497)
 Current api has the [following types](../../../api/prog/types.proto) 
 
 ```protobuf
@@ -58,7 +61,6 @@ message CanaryMetricTemplate {
 ````
 
 that introducing CanaryMetric as new field of CanaryAnaylsis we could achieve what we want... 
-
 
 ```protobuf
 
@@ -101,21 +103,81 @@ message CanaryMetricTemplate {
 
 ```
 
+## Journeys Validation 
 
-https://miro.com/app/board/uXjVOoAPntE=/?share_link_id=505858014497
+Given the request `GET /v1/pd/canaries/my-canary`
+And a response like
+```json
+{
+  "name": "my-canary",
+  ...
+  "analysis": {
+    ...
+    "metrics": [
+      {
+        "cluster_name": "my-cluster",
+        "name": "request-success-rate",
+        "threshold_range": {
+          "min": "90",
+          "max": "99"
+        },
+        "interval": "1m"
+      },
+      {
+        "cluster_name": "my-cluster",
+        "name": "my-awesome-custom-metric",
+        "threshold_range": {
+          "min": "90",
+          "max": "99"
+        },
+        "interval": "1m",
+        "metric_template": {
+          ...,
+          "provider": {
+            "type":"datatdog",
+          },
+          "query": "my-datadog-query",
+        }
+      }
+    ]
+  }
+}
+```
 
+When **As user, I want to have an overview view of a canary metrics**
+That experience contains the information from the response 
+```
+        "cluster_name": "my-cluster",
+        "name": "request-success-rate",
+        "threshold_range": {
+          "min": "90",
+          "max": "99"
+        },
+        "interval": "1m"
+```
 
-
-
-
+When **As user, I want to have an detailed view on a metric template**
+That experience contains the information from the response
+```
+  "metric_template": {
+          ...,
+          "provider": {
+            "type":"datatdog",
+          },
+          "query": "my-datadog-query",
+        }
+      }
+```
 
 
 ##  Alternatives Considered 
 
 ### Limitations
-
-
+- Not identified 
+- 
 ## References
+- [Flagger How it works](https://docs.flagger.app/usage/how-it-works#canary-analysis)
+- [Flagger Metrics Analysis](https://docs.flagger.app/usage/metrics)
 
 ## Log 
 
