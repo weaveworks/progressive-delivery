@@ -31,4 +31,4 @@ spec:
   values:
     prometheus:
       install: true
-    meshProvider: traefik
+    meshProvider: istio
