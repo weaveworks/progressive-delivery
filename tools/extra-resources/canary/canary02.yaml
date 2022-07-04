@@ -16,7 +16,7 @@ spec:
   autoscalerRef:
     apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
-    name: podinfo
+    name: hpa2
   service:
     # service port number
     port: 9898

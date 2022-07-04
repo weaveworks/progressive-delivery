@@ -28,3 +28,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: flagger
+  values:
+    prometheus:
+      install: true
+    meshProvider: traefik
