@@ -3,6 +3,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: hpa01
+  namespace: canary
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
