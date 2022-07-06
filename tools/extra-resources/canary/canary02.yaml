@@ -8,7 +8,7 @@ spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: deployment02
+    name: podinfo-02
   # the maximum time in seconds for the canary deployment
   # to make progress before it is rollback (default 600s)
   progressDeadlineSeconds: 60
@@ -16,7 +16,7 @@ spec:
   autoscalerRef:
     apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
-    name: hpa02
+    name: podinfo-02
   service:
     # service port number
     port: 9898

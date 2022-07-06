@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment02
+  name: podinfo-01
   namespace: canary
   labels:
-    app: deployment02
+    app: podinfo-01
 spec:
   minReadySeconds: 5
   revisionHistoryLimit: 5
@@ -15,35 +15,57 @@ spec:
     type: RollingUpdate
   selector:
     matchLabels:
-      app: deployment02
+      app: podinfo-01
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9797"
       labels:
-        app: deployment02
+        app: podinfo-01
     spec:
       containers:
-      - name: app
-        image: ghcr.io/yitsushi/hello-world:1.0.7
+      - name: podinfod
+        image: ghcr.io/stefanprodan/podinfo:6.0.0
         imagePullPolicy: IfNotPresent
         ports:
         - name: http
+          containerPort: 9898
+          protocol: TCP
+        - name: http-metrics
+          containerPort: 9797
+          protocol: TCP
+        - name: grpc
           containerPort: 9999
           protocol: TCP
+        command:
+        - ./podinfo
+        - --port=9898
+        - --port-metrics=9797
+        - --grpc-port=9999
+        - --grpc-service-name=podinfo
+        - --level=info
+        - --random-delay=false
+        - --random-error=false
         env:
-        - name: LISTEN
-          value: ":9999"
+        - name: PODINFO_UI_COLOR
+          value: "#34577c"
         livenessProbe:
-          httpGet:
-            scheme: HTTP
-            path: /
-            port: 9999
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/healthz
           initialDelaySeconds: 5
           timeoutSeconds: 5
         readinessProbe:
-          httpGet:
-            scheme: HTTP
-            path: /
-            port: 9999
+          exec:
+            command:
+            - podcli
+            - check
+            - http
+            - localhost:9898/readyz
           initialDelaySeconds: 5
           timeoutSeconds: 5
         resources:
