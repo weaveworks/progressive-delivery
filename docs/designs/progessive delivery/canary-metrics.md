@@ -15,21 +15,21 @@ created and this document addresses the design for the first of the analysis tab
 
 the user journeys considered are:
 
-- as wge user, I want to have an **overview** understanding of the metrics used for an application canary analisys.  
-- as wge user, I want to have a **detailed** understanding of the metrics used for an application canary analisys.
+- as wge user, I want to have an **overview** understanding of the metrics used for an application canary analysis.  
+- as wge user, I want to have a **detailed** understanding of the metrics used for an application canary analysis.
 
 ## Scope 
 **In scope** 
   - design backend apis for canary analysis metrics.
 **Out of scope**
-  - other sections of the analysis experienc like webhooks and alerts. It will be covered by other issues.  
+  - other sections of the analysis experience like webhooks and alerts. It will be covered by other issues.  
   - frontend integration with backend apis.   
 
 ##  Proposed Solution (What / How)
 
 We want to provide an api for the analysis section of the canary resource
 
-![canary analisys overview](imgs/canary-analysis-overview.png)
+![canary analysis overview](imgs/canary-analysis-overview.png)
 
 Looking at the **availability** of the data, our current [API]((../../../api/prog/types.proto)) supports `Canary -> CanaryAnalysis -> CanaryMetricTemplate`
 but does not include `Canary -> CanaryAnalysis -> CanaryMetric -> CanaryMetricTemplate` so it will require to be extended.  
@@ -187,12 +187,11 @@ message CanaryMetricTemplate {
   string query = 5;
 }
 ```
-
-
 ### Journeys Validation
 
-
 **Alternative A journey validation** 
+
+Both overview and detailed journey get fullfilled by a single request.
 
 Given the request `GET /v1/pd/canaries/my-canary`
 And a response like
@@ -317,6 +316,9 @@ And a response like
 }
 ```
 
+## Recommendation
+
+- To be added after internal discussion
 
 ## References
 - [Flagger How it works](https://docs.flagger.app/usage/how-it-works#canary-analysis)
