@@ -1,7 +1,7 @@
 # Canary Analysis - Canary Metrics Design Proposal
 
 This document outlines a proposed design to extend gitops enterprise progressive delivery domain with 
-canary analysis capabilities.
+canary analysis capabilities. It will be using analysis of metrics as example.
 
 ## Problem statement 
 
@@ -15,37 +15,27 @@ created and this document addresses the design for the first of the analysis tab
 
 the user journeys considered are:
 
-- as wge user, i want to have an overview understanding of the metrics used for an application canary analisys.  
-- as wge user, i want to have a detailed understanding of the metrics used for an application canary analisys.
+- as wge user, I want to have an **overview** understanding of the metrics used for an application canary analisys.  
+- as wge user, I want to have a **detailed** understanding of the metrics used for an application canary analisys.
 
 ## Scope 
 **In scope** 
-  - canary analysis metrics backend apis.
+  - design backend apis for canary analysis metrics.
 **Out of scope**
-  - canary analysis webhooks and alerts not in scope to simplify design. a similar approach could be followed for them. 
-  - frontend due to knowledge limitations.  
+  - other sections of the analysis experienc like webhooks and alerts. It will be covered by other issues.  
+  - frontend integration with backend apis.   
 
 ##  Proposed Solution (What / How)
 
-[Board](https://miro.com/app/board/uXjVOoAPntE=/?share_link_id=505858014497)
+We want to provide an api for the analysis section of the canary resource
 
-Current api has the [following types](../../../api/prog/types.proto) 
+![canary analisys overview](imgs/canary-analysis-overview.png)
+
+Looking at the **availability** of the data, our current [API]((../../../api/prog/types.proto)) supports `Canary -> CanaryAnalysis -> CanaryMetricTemplate`
+but does not include `Canary -> CanaryAnalysis -> CanaryMetric -> CanaryMetricTemplate` so it will require to be extended.  
 
 ```protobuf
-message Canary {
-  string namespace = 1;
-  string name = 2;
-  string cluster_name = 3;
-  string provider = 4;
-  CanaryTargetReference target_reference = 5;
-  CanaryTargetDeployment target_deployment = 6;
-  CanaryStatus status = 7;
-  string deploymentStrategy = 8;
-  CanaryAnalysis analysis = 9;
-  string yaml = 10;
-}
-
-`message CanaryAnalysis {
+ message CanaryAnalysis {
   string interval = 1;
   int32 iterations = 2;
   int32 mirror_weight = 3;
@@ -58,25 +48,18 @@ message Canary {
   string yaml = 10;
   repeated CanaryMetricTemplate metric_templates = 11;
 }
+```
 
-message CanaryMetricTemplate {
-  string cluster_name = 1;
-  string name = 2;
-  string namespace = 3;
-  MetricProvider provider = 4;
-  string query = 5;
-}
-````
-In order to achieve metrics visibility a couple of alternatives could be taken 
+### Alternatives 
 
-- Alternative A: to include metrics template within metrics analysis response.
-- Alternative B: to do not include metric templates and to have a metrics template endpoint. 
+To extend it, we have (at least) a couple of alternatives 
 
+- Alternative A: to add `canary metrics` and `metric template` as part of get canary response.
+- Alternative B: to add `canary metrics` and `metric template ref` as part of get canary response. add endpoint for metric template. 
 
-### Alternative A: include metrics template within metrics analysis response 
+**Alternative A: to add `canary metrics` and `metric template` as part of get canary response.**   
 
 ```protobuf
-
 message CanaryAnalysis {
   string interval = 1;
   int32 iterations = 2;
@@ -112,11 +95,104 @@ message CanaryMetricTemplate {
   MetricProvider provider = 4;
   string query = 5;
 }
-
-
 ```
 
-**Journeys Validation** 
+**Alternative B: to add `canary metrics` and `metric template ref` as part of get canary response. add endpoint for metric template**
+
+Same as `Alternative A` but with the difference that instead of having the metric template we have a reference to it
+
+```protobuf
+message CanaryMetric {
+  string cluster_name = 1;
+  string name = 2;
+  string namespace = 3;
+  CanaryMetricThresholdRange threshold_range = 4
+  string interval = 5
+  CanaryMetricTemplateRef metric_template = 6
+}
+
+message CanaryMetricTemplateRef {
+  string cluster_name = 1;
+  string name = 2;
+  string namespace = 3;
+}
+```
+the metric template could be resolved by adding a new api endpoint to get metric templates by name
+
+```json
+ "/v1/pd/metric_templates/{name}": {
+      "get": {
+        "summary": "GetMetricTemplate returns a MetricTemplate object.",
+        "operationId": "ProgressiveDeliveryService_GetMetricTemplatey",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/GetMetricTemplateResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "namespace",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "clusterName",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "ProgressiveDeliveryService"
+        ]
+      }
+    },
+``` 
+with the following response type
+
+```json
+    "GetMetricTemplateResponse": {
+      "type": "object",
+      "properties": {
+        "metric_template": {
+          "$ref": "#/definitions/MetricTemplate"
+        },
+      }
+    },
+```
+and CanaryMetricTemplate 
+
+```protobuf
+message CanaryMetricTemplate {
+  string cluster_name = 1;
+  string name = 2;
+  string namespace = 3;
+  MetricProvider provider = 4;
+  string query = 5;
+}
+```
+
+
+### Journeys Validation
+
+
+**Alternative A journey validation** 
 
 Given the request `GET /v1/pd/canaries/my-canary`
 And a response like
@@ -183,100 +259,63 @@ That experience contains the information from the response
       }
 ```
 
-### Alternative B: to do not include metric templates and to have a metrics template endpoint.
+**Alternative B journey validation**
 
-Same as Alternative A but with the difference that instead of having the metric templte we have a reference to it
+Overview we could achieve it by the following request
 
-```protobuf
-
-message CanaryMetric {
-  string cluster_name = 1;
-  string name = 2;
-  string namespace = 3;
-  CanaryMetricThresholdRange threshold_range = 4
-  string interval = 5
-  CanaryMetricTemplateRef metric_template = 6
+Given the request `GET /v1/pd/canaries/my-canary`
+And a response like
+```json
+{
+  "name": "my-canary",
+  ...
+  "analysis": {
+    ...
+    "metrics": [
+      {
+        "cluster_name": "my-cluster",
+        "name": "request-success-rate",
+        "threshold_range": {
+          "min": "90",
+          "max": "99"
+        },
+        "interval": "1m"
+      },
+      {
+        "cluster_name": "my-cluster",
+        "name": "my-awesome-custom-metric",
+        "threshold_range": {
+          "min": "90",
+          "max": "99"
+        },
+        "interval": "1m",
+        "metric_template_ref": {
+          "name": "my-awesome-custom-metric-template",
+          "namespace": "test",
+        }
+      }
+    ]
+  }
 }
-
-message CanaryMetricTemplateRef {
-  string cluster_name = 1;
-  string name = 2;
-  string namespace = 3;
-}
-
-
 ```
 
-That could be resolved via a new api endpoint "/v1/pd/metric_templates/"
+Detailed view could be achieved by another call
+
+Given the request `GET /v1/pd/metric_templates/my-awesome-custom-metric-template`
+And a response like
 
 ```json
-
- "/v1/pd/metric_templates/{name}": {
-      "get": {
-        "summary": "GetMetricTemplate returns a MetricTemplate object.",
-        "operationId": "ProgressiveDeliveryService_GetMetricTemplatey",
-        "responses": {
-          "200": {
-            "description": "A successful response.",
-            "schema": {
-              "$ref": "#/definitions/GetMetricTemplateResponse"
-            }
-          },
-          "default": {
-            "description": "An unexpected error response.",
-            "schema": {
-              "$ref": "#/definitions/rpcStatus"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "name",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "namespace",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "clusterName",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "tags": [
-          "ProgressiveDeliveryService"
-        ]
-      }
+{
+  "metric_template": {
+    ...,
+    "name": "my-awesome-custom-metric-template",
+    "provider": {
+      "type": "datatdog",
     },
-``` 
-
-with the following response type 
-
-```json
-    "GetMetricTemplateResponse": {
-      "type": "object",
-      "properties": {
-        "metric_template": {
-          "$ref": "#/definitions/MetricTemplate"
-        },
-      }
-    },
+    "query": "my-datadog-query",
+  }
+}
 ```
-
-and metric template as specified in Alternative A
-
-**Journeys Validation** 
-
-1 - Request `GET /v1/pd/canaries/my-canary` to achieve overview view
-And a response like within alternative A
-
-2- Request `GET /v1/pd/metric_templates/my-awesome-custom-metric-template` to get the metric template view when required a detailed view 
 
 
 ## References
