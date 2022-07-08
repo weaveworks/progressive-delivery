@@ -39,6 +39,22 @@ export GITHUB_REPO="${GITHUB_REPO:-pd-dev}"
   --personal
 ```
 
+To install extra resources, use the `./tools/install-resources.sh` script:
+
+```bash
+./tools/install-resources.sh -h
+usage: ./tools/install-resources.sh [-i] [-f] [-c]
+
+Install extra resources.
+
+OPTIONS:
+   -c|--canaries     Install Canary objects
+   -f|--flagger      Install Flagger
+   -i|--istio        Install Istio
+   -h|--help         Show this message
+```
+
+
 ### Start environment
 
 To start the development environment, run:
@@ -80,7 +96,7 @@ Use a gRPC client to interact with the API, for example:
 **List available canaries**
 
 ```bash
-❯ grpcurl -plaintext localhost:9002 ProgressiveDeliveryService.ListCanaries
+grpcurl -plaintext localhost:9002 ProgressiveDeliveryService.ListCanaries
 ```
 ```json
 {
