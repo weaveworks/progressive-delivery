@@ -15,6 +15,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/urfave/cli/v2"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
@@ -84,7 +85,7 @@ func serve(cfg *appConfig) error {
 		fetcher,
 		&nsChecker,
 		cfg.Logger,
-		server.CreateScheme(),
+		kube.CreateScheme(),
 	)
 	clientsFactory.Start(ctx)
 

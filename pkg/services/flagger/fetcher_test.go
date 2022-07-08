@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
-	"github.com/weaveworks/progressive-delivery/pkg/server"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -20,7 +20,7 @@ func TestFetcher_GetMetricTemplate(t *testing.T) {
 	assert.NoError(t, err)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
@@ -50,7 +50,7 @@ func TestFetcher_ListMetricTemplate(t *testing.T) {
 	assert.NoError(t, err)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 

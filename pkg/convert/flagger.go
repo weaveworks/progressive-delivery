@@ -1,14 +1,18 @@
 package convert
 
 import (
+	"bufio"
+	"bytes"
 	"time"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	"github.com/go-asset/generics/list"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime/serializer/json"
 )
 
 func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment appsv1.Deployment, promoted []v1.Container) *pb.Canary {
@@ -29,6 +33,11 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		KustomizeNamespace: deployment.Labels["kustomize.toolkit.fluxcd.io/namespace"],
 		KustomizeName:      deployment.Labels["kustomize.toolkit.fluxcd.io/name"],
 	}
+
+	// canaryYaml, err := serializeObj(canary)
+	// if err != nil {
+	// 	panic("failed serializing canary")
+	// }
 
 	canaryYaml, _ := yaml.Marshal(canary)
 	analysisYaml, _ := yaml.Marshal(canary.Spec.Analysis)
@@ -107,4 +116,18 @@ func FlaggerMetricTemplateToProto(template v1beta1.MetricTemplate, clusterName s
 			InsecureSkipVerify: template.Spec.Provider.InsecureSkipVerify,
 		},
 	}
+}
+
+func serializeObj(canary v1beta1.Canary) ([]byte, error) {
+	scheme := kube.CreateScheme()
+	s := json.NewYAMLSerializer(json.DefaultMetaFactory, scheme, scheme)
+
+	var b bytes.Buffer
+	yamlBuffer := bufio.NewWriter(&b)
+
+	if err := s.Encode(&canary, yamlBuffer); err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
 }

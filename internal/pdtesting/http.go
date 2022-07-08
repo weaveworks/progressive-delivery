@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
@@ -37,7 +38,7 @@ func MakeHTTPServer(
 		fetcher,
 		&nsChecker,
 		log,
-		server.CreateScheme(),
+		kube.CreateScheme(),
 	)
 
 	_ = clientsFactory.UpdateClusters(ctx)
