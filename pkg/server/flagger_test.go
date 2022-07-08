@@ -135,26 +135,28 @@ func TestGetCanary(t *testing.T) {
 	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
 	_ = pdtesting.NewDeployment(ctx, t, k, fmt.Sprintf("%s-primary", appName), ns.Name)
 
-	tpl := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
-		Name:            appName,
-		Namespace:       ns.GetName(),
-		ProviderType:    "prometheus",
-		ProviderAddress: "http://prometheus:9090",
-		Query:           "custom query",
-	})
+	//tpl := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+	//	Name:            appName,
+	//	Namespace:       ns.GetName(),
+	//	ProviderType:    "prometheus",
+	//	ProviderAddress: "http://prometheus:9090",
+	//	Query:           "custom query",
+	//})
+
+	canaryMetric := v1beta1.CanaryMetric{
+		Name:     "request-success-rate",
+		Interval: "1m",
+		ThresholdRange: &v1beta1.CanaryThresholdRange{
+			Min: toFloatPtr(90.0),
+			Max: toFloatPtr(99.0),
+		},
+	}
+
 	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
 		Name:      appName,
 		Namespace: ns.GetName(),
-		Metrics: []v1beta1.CanaryMetric{
-			{
-				TemplateRef: &v1beta1.CrossNamespaceObjectReference{
-					APIVersion: "flagger.app/v1beta1",
-					Kind:       "MetricTemplate",
-					Name:       tpl.GetName(),
-					Namespace:  ns.GetName(),
-				},
-			},
-		},
+		//TODO: add canary with templateRef
+		Metrics: []v1beta1.CanaryMetric{canaryMetric},
 	})
 	defer cleanup(ctx, t, k, &canary)
 
@@ -169,11 +171,17 @@ func TestGetCanary(t *testing.T) {
 		string(flagger.BlueGreenDeploymentStrategy),
 		response.GetCanary().GetDeploymentStrategy(),
 	)
-	assert.NotEmpty(t, response.GetCanary().GetAnalysis().GetMetricTemplates())
+	//TODO: add metrics
+	assert.NotEmpty(t, response.GetCanary().GetAnalysis().GetMetrics())
 	assert.Equal(t,
-		response.GetCanary().GetAnalysis().GetMetricTemplates()[0].GetName(),
-		tpl.GetName(),
+		response.GetCanary().GetAnalysis().GetMetrics()[0].GetName(),
+		canaryMetric.Name,
 	)
+	assert.Equal(t,
+		response.GetCanary().GetAnalysis().GetMetrics()[0].ThresholdRange.Min,
+		canaryMetric.ThresholdRange.Min,
+	)
+
 }
 
 func TestIsFlaggerAvailable(t *testing.T) {
@@ -190,4 +198,9 @@ func cleanup(ctx context.Context, t *testing.T, k client.Client, obj client.Obje
 	if err := k.Delete(ctx, obj); err != nil {
 		t.Error(err)
 	}
+}
+
+func toFloatPtr(val int) *float64 {
+	v := float64(val)
+	return &v
 }

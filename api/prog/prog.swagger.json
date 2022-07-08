@@ -329,10 +329,10 @@
         "yaml": {
           "type": "string"
         },
-        "metricTemplates": {
+        "metrics": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/CanaryMetricTemplate"
+            "$ref": "#/definitions/CanaryMetric"
           }
         }
       }
@@ -360,6 +360,26 @@
         }
       }
     },
+    "CanaryMetric": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "thresholdRange": {
+          "$ref": "#/definitions/CanaryMetricThresholdRange"
+        },
+        "interval": {
+          "type": "string"
+        },
+        "metricTemplate": {
+          "$ref": "#/definitions/CanaryMetricTemplate"
+        }
+      }
+    },
     "CanaryMetricTemplate": {
       "type": "object",
       "properties": {
@@ -376,6 +396,17 @@
           "$ref": "#/definitions/MetricProvider"
         },
         "query": {
+          "type": "string"
+        }
+      }
+    },
+    "CanaryMetricThresholdRange": {
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": "string"
+        },
+        "max": {
           "type": "string"
         }
       }

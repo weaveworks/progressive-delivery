@@ -51,6 +51,20 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		promotedImages[c.Name] = c.Image
 	}
 
+	//canary metrics
+	metrics := []*pb.CanaryMetric{}
+	for _, metric := range canary.Spec.Analysis.Metrics {
+		metrics = append(metrics, &pb.CanaryMetric{
+			Name:     string(metric.Name),
+			Interval: string(metric.Interval),
+			ThresholdRange: &pb.CanaryMetricThresholdRange{
+				Min: "10",
+				//string(metric.ThresholdRange.Min),
+				Max: "10",
+			},
+		})
+	}
+
 	return &pb.Canary{
 		Name:        canary.GetName(),
 		Namespace:   canary.GetNamespace(),
@@ -81,6 +95,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 				canary.Spec.Analysis.StepWeights,
 				func(v int) int32 { return int32(v) },
 			),
+			Metrics: metrics,
 		},
 		Status: &pb.CanaryStatus{
 			Phase:              string(canary.Status.Phase),
