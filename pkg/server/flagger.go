@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/convert"
@@ -60,19 +61,41 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 		})
 	}
 
-	for clusterName, list := range results {
-		for _, item := range list {
+	for clusterName, canaries := range results {
+		for _, canary := range canaries {
 			// Ignored intentioannly. The function returns with an error, but here we
 			// don't care about it, if it's not found, we can return to the client
 			// with an empty deployment.
-			deployment, _ := pd.flagger.FetchTargetRef(ctx, clusterName, clusterClient, &item)
+			deployment, _ := pd.flagger.FetchTargetRef(ctx, clusterName, clusterClient, &canary)
 
-			promoted, _ := pd.flagger.FetchPromoted(ctx, clusterName, clusterClient, &item)
+			promoted, _ := pd.flagger.FetchPromoted(ctx, clusterName, clusterClient, &canary)
 
 			containers := promoted.Spec.Template.Spec.Containers
-			pbObject := convert.FlaggerCanaryToProto(item, clusterName, deployment, containers)
 
-			pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(item))
+			canaryMetricTemplates := []v1beta1.MetricTemplate{}
+			for _, canaryMetric := range canary.GetAnalysis().Metrics {
+				if canaryMetric.TemplateRef != nil {
+					template, err := pd.flagger.GetMetricTemplate(
+						ctx,
+						msg.ClusterName,
+						clusterClient,
+						canaryMetric.TemplateRef.Name,
+						canaryMetric.TemplateRef.Namespace,
+					)
+					if err != nil {
+						pd.logger.Error(err, "unable to fetch metric template from reference")
+						continue
+					}
+					canaryMetricTemplates = append(
+						canaryMetricTemplates,
+						template,
+					)
+				}
+			}
+
+			pbObject := convert.FlaggerCanaryToProto(canary, clusterName, deployment, containers, canaryMetricTemplates)
+
+			pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(canary))
 
 			response.Canaries = append(response.Canaries, pbObject)
 		}
@@ -107,31 +130,31 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 	}
 
 	containers := promoted.Spec.Template.Spec.Containers
-	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment, containers)
+
+	canaryMetricTemplates := []v1beta1.MetricTemplate{}
+	for _, item := range canary.GetAnalysis().Metrics {
+		if item.TemplateRef != nil {
+			template, err := pd.flagger.GetMetricTemplate(
+				ctx,
+				msg.ClusterName,
+				clusterClient,
+				item.TemplateRef.Name,
+				item.TemplateRef.Namespace,
+			)
+			if err != nil {
+				pd.logger.Error(err, "unable to fetch metric template from reference")
+				continue
+			}
+			canaryMetricTemplates = append(
+				canaryMetricTemplates,
+				template,
+			)
+		}
+	}
+
+	pbObject := convert.FlaggerCanaryToProto(*canary, msg.ClusterName, deployment, containers, canaryMetricTemplates)
 
 	pbObject.DeploymentStrategy = string(pd.flagger.DeploymentStrategyFor(*canary))
-	//pbObject.Analysis.Metrics = []*pb.CanaryMetric{}
-	//TODO: resolve metric template references before returning metrics
-	//for _, item := range canary.GetAnalysis().Metrics {
-	//	if item.TemplateRef != nil {
-	//		template, err := pd.flagger.GetMetricTemplate(
-	//			ctx,
-	//			msg.ClusterName,
-	//			clusterClient,
-	//			item.TemplateRef.Name,
-	//			item.TemplateRef.Namespace,
-	//		)
-	//		if err != nil {
-	//			pd.logger.Error(err, "unable to fetch metric template from reference")
-	//			continue
-	//		}
-	//
-	//		pbObject.Analysis.Metrics = append(
-	//			pbObject.Analysis.Metrics,
-	//			convert.FlaggerMetricTemplateToProto(template, msg.ClusterName),
-	//		)
-	//	}
-	//}
 
 	response := &pb.GetCanaryResponse{
 		Canary:     pbObject,

@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment appsv1.Deployment, promoted []v1.Container) *pb.Canary {
+func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment appsv1.Deployment, promoted []v1.Container, metricTemplates []v1beta1.MetricTemplate) *pb.Canary {
 	conditions := []*pb.CanaryCondition{}
 
 	for _, condition := range canary.Status.Conditions {
@@ -54,6 +54,19 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 	//canary metrics
 	metrics := []*pb.CanaryMetric{}
 	for _, metric := range canary.Spec.Analysis.Metrics {
+		var metricTemplate *pb.CanaryMetricTemplate
+		if metric.TemplateRef != nil {
+			for _, mt := range metricTemplates {
+				if mt.Name == metric.Name {
+					metricTemplate = &pb.CanaryMetricTemplate{
+						Namespace:   mt.Namespace,
+						Name:        mt.Name,
+						ClusterName: clusterName,
+						//TODO: add rest of the fields
+					}
+				}
+			}
+		}
 		metrics = append(metrics, &pb.CanaryMetric{
 			Name:     string(metric.Name),
 			Interval: string(metric.Interval),
@@ -62,6 +75,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 				//string(metric.ThresholdRange.Min),
 				Max: "10",
 			},
+			MetricTemplate: metricTemplate,
 		})
 	}
 
