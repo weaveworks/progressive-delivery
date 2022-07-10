@@ -143,13 +143,13 @@ func TestGetCanary(t *testing.T) {
 			Max: toFloatPtr(99),
 		},
 	}
-
 	canaryMetricTemplate := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
-		Name:            appName,
-		Namespace:       ns.GetName(),
-		ProviderType:    "prometheus",
-		ProviderAddress: "http://prometheus:9090",
-		Query:           "custom query",
+		Name:               appName,
+		Namespace:          ns.GetName(),
+		ProviderType:       "prometheus",
+		ProviderAddress:    "http://prometheus:9090",
+		Query:              "custom query",
+		ProviderSecretName: "prometheusSecret",
 	})
 	canaryMetricWithTemplate := v1beta1.CanaryMetric{
 		Name:     "my-custom-metric",
@@ -186,14 +186,14 @@ func TestGetCanary(t *testing.T) {
 	)
 	//TODO: add metrics
 	assert.True(t, len(response.GetCanary().GetAnalysis().Metrics) == 2)
-	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[0], canaryMetric)
-	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithTemplate)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[0], canaryMetric, nil)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithTemplate, canaryMetricTemplate)
 }
 
-func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.CanaryMetric) {
+func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.CanaryMetric, expectedMetricTemplate *v1beta1.MetricTemplate) {
 	assert.Equal(t,
-		actual.GetName(),
 		expected.Name,
+		actual.GetName(),
 	)
 	assert.Equal(t,
 		fmt.Sprintf("%f", *expected.ThresholdRange.Min),
@@ -201,12 +201,20 @@ func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.Canar
 	)
 	if expected.TemplateRef != nil {
 		assert.Equal(t,
-			actual.MetricTemplate.Name,
 			expected.TemplateRef.Name,
+			actual.MetricTemplate.Name,
 		)
 		assert.Equal(t,
-			actual.MetricTemplate.Namespace,
 			expected.TemplateRef.Namespace,
+			actual.MetricTemplate.Namespace,
+		)
+		assert.Equal(t,
+			expectedMetricTemplate.Spec.Query,
+			actual.MetricTemplate.Query,
+		)
+		assert.Equal(t,
+			expectedMetricTemplate.Spec.Provider.Type,
+			actual.MetricTemplate.Provider.Type,
 		)
 	}
 }

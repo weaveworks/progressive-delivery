@@ -46,7 +46,6 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 	}
 
 	promotedImages := map[string]string{}
-
 	for _, c := range promoted {
 		promotedImages[c.Name] = c.Image
 	}
@@ -57,12 +56,19 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		var metricTemplate *pb.CanaryMetricTemplate
 		if metric.TemplateRef != nil {
 			for _, mt := range metricTemplates {
-				if mt.Name == metric.Name {
+				if mt.Name == metric.TemplateRef.Name &&
+					mt.Namespace == metric.TemplateRef.Namespace {
 					metricTemplate = &pb.CanaryMetricTemplate{
 						Namespace:   mt.Namespace,
 						Name:        mt.Name,
 						ClusterName: clusterName,
-						//TODO: add rest of the fields
+						Provider: &pb.MetricProvider{
+							Type:               mt.Spec.Provider.Type,
+							Address:            mt.Spec.Provider.Address,
+							SecretName:         mt.Spec.Provider.SecretRef.Name,
+							InsecureSkipVerify: mt.Spec.Provider.InsecureSkipVerify,
+						},
+						Query: mt.Spec.Query,
 					}
 				}
 			}
