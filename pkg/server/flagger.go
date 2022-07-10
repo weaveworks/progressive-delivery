@@ -113,7 +113,6 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 	//pbObject.Analysis.Metrics = []*pb.CanaryMetric{}
 	//TODO: resolve metric template references before returning metrics
 	//for _, item := range canary.GetAnalysis().Metrics {
-	//
 	//	if item.TemplateRef != nil {
 	//		template, err := pd.flagger.GetMetricTemplate(
 	//			ctx,
@@ -124,7 +123,6 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 	//		)
 	//		if err != nil {
 	//			pd.logger.Error(err, "unable to fetch metric template from reference")
-	//
 	//			continue
 	//		}
 	//

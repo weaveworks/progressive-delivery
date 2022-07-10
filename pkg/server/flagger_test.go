@@ -135,28 +135,41 @@ func TestGetCanary(t *testing.T) {
 	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
 	_ = pdtesting.NewDeployment(ctx, t, k, fmt.Sprintf("%s-primary", appName), ns.Name)
 
-	//tpl := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
-	//	Name:            appName,
-	//	Namespace:       ns.GetName(),
-	//	ProviderType:    "prometheus",
-	//	ProviderAddress: "http://prometheus:9090",
-	//	Query:           "custom query",
-	//})
-
 	canaryMetric := v1beta1.CanaryMetric{
 		Name:     "request-success-rate",
 		Interval: "1m",
 		ThresholdRange: &v1beta1.CanaryThresholdRange{
-			Min: toFloatPtr(90.0),
-			Max: toFloatPtr(99.0),
+			Min: toFloatPtr(90),
+			Max: toFloatPtr(99),
 		},
 	}
 
+	canaryMetricTemplate := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+		Name:            appName,
+		Namespace:       ns.GetName(),
+		ProviderType:    "prometheus",
+		ProviderAddress: "http://prometheus:9090",
+		Query:           "custom query",
+	})
+	canaryMetricWithTemplate := v1beta1.CanaryMetric{
+		Name:     "my-custom-metric",
+		Interval: "2m",
+		ThresholdRange: &v1beta1.CanaryThresholdRange{
+			Min: toFloatPtr(50.0),
+			Max: toFloatPtr(75.0),
+		},
+		TemplateRef: &v1beta1.CrossNamespaceObjectReference{
+			Name:      canaryMetricTemplate.Name,
+			Namespace: canaryMetricTemplate.Namespace,
+		},
+	}
 	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
 		Name:      appName,
 		Namespace: ns.GetName(),
-		//TODO: add canary with templateRef
-		Metrics: []v1beta1.CanaryMetric{canaryMetric},
+		Metrics: []v1beta1.CanaryMetric{
+			canaryMetric,
+			canaryMetricWithTemplate,
+		},
 	})
 	defer cleanup(ctx, t, k, &canary)
 
@@ -172,16 +185,30 @@ func TestGetCanary(t *testing.T) {
 		response.GetCanary().GetDeploymentStrategy(),
 	)
 	//TODO: add metrics
-	assert.NotEmpty(t, response.GetCanary().GetAnalysis().GetMetrics())
-	assert.Equal(t,
-		response.GetCanary().GetAnalysis().GetMetrics()[0].GetName(),
-		canaryMetric.Name,
-	)
-	assert.Equal(t,
-		response.GetCanary().GetAnalysis().GetMetrics()[0].ThresholdRange.Min,
-		canaryMetric.ThresholdRange.Min,
-	)
+	assert.True(t, len(response.GetCanary().GetAnalysis().Metrics) == 2)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[0], canaryMetric)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithTemplate)
+}
 
+func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.CanaryMetric) {
+	assert.Equal(t,
+		actual.GetName(),
+		expected.Name,
+	)
+	assert.Equal(t,
+		fmt.Sprintf("%f", *expected.ThresholdRange.Min),
+		actual.ThresholdRange.Min,
+	)
+	if expected.TemplateRef != nil {
+		assert.Equal(t,
+			actual.MetricTemplate.Name,
+			expected.TemplateRef.Name,
+		)
+		assert.Equal(t,
+			actual.MetricTemplate.Namespace,
+			expected.TemplateRef.Namespace,
+		)
+	}
 }
 
 func TestIsFlaggerAvailable(t *testing.T) {
