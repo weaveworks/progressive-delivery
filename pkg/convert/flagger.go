@@ -58,6 +58,11 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 			for _, mt := range metricTemplates {
 				if mt.Name == metric.TemplateRef.Name &&
 					mt.Namespace == metric.TemplateRef.Namespace {
+					//secretRef is optional
+					var secretRefName string
+					if mt.Spec.Provider.SecretRef != nil {
+						secretRefName = mt.Spec.Provider.SecretRef.Name
+					}
 					metricTemplate = &pb.CanaryMetricTemplate{
 						Namespace:   mt.Namespace,
 						Name:        mt.Name,
@@ -65,7 +70,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 						Provider: &pb.MetricProvider{
 							Type:               mt.Spec.Provider.Type,
 							Address:            mt.Spec.Provider.Address,
-							SecretName:         mt.Spec.Provider.SecretRef.Name,
+							SecretName:         secretRefName,
 							InsecureSkipVerify: mt.Spec.Provider.InsecureSkipVerify,
 						},
 						Query: mt.Spec.Query,
