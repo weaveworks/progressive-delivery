@@ -140,8 +140,11 @@ func TestGetCanary(t *testing.T) {
 		Interval: "1m",
 		ThresholdRange: &v1beta1.CanaryThresholdRange{
 			Min: toFloatPtr(90),
-			Max: toFloatPtr(99),
 		},
+	}
+	canaryMetricWithoutThreshold := v1beta1.CanaryMetric{
+		Name:     "request-success-rate",
+		Interval: "1m",
 	}
 	canaryMetricTemplate := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
 		Name:               appName,
@@ -168,6 +171,7 @@ func TestGetCanary(t *testing.T) {
 		Namespace: ns.GetName(),
 		Metrics: []v1beta1.CanaryMetric{
 			canaryMetric,
+			canaryMetricWithoutThreshold,
 			canaryMetricWithTemplate,
 		},
 	})
@@ -184,9 +188,10 @@ func TestGetCanary(t *testing.T) {
 		string(flagger.BlueGreenDeploymentStrategy),
 		response.GetCanary().GetDeploymentStrategy(),
 	)
-	assert.True(t, len(response.GetCanary().GetAnalysis().Metrics) == 2)
+	assert.True(t, len(response.GetCanary().GetAnalysis().Metrics) == 3)
 	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[0], canaryMetric, nil)
-	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithTemplate, canaryMetricTemplate)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithoutThreshold, nil)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[2], canaryMetricWithTemplate, canaryMetricTemplate)
 }
 
 func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.CanaryMetric, expectedMetricTemplate *v1beta1.MetricTemplate) {
@@ -194,10 +199,20 @@ func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.Canar
 		expected.Name,
 		actual.GetName(),
 	)
-	assert.Equal(t,
-		*expected.ThresholdRange.Min,
-		actual.ThresholdRange.Min,
-	)
+	if expected.ThresholdRange != nil {
+		if expected.ThresholdRange.Min != nil {
+			assert.Equal(t,
+				*expected.ThresholdRange.Min,
+				actual.ThresholdRange.Min,
+			)
+		}
+		if expected.ThresholdRange.Max != nil {
+			assert.Equal(t,
+				*expected.ThresholdRange.Max,
+				actual.ThresholdRange.Max,
+			)
+		}
+	}
 	if expected.TemplateRef != nil {
 		assert.Equal(t,
 			expected.TemplateRef.Name,

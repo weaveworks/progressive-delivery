@@ -17,6 +17,12 @@ tools: ## Install Go tools
 dependencies: tools ## Install build dependencies
 	$(CURRENT_DIR)/tools/download-deps.sh $(CURRENT_DIR)/tools/dependencies.toml
 
+create-dev-cluster:
+	$(CURRENT_DIR)/tools/bin/kind create cluster --name pd-dev
+
+delete-dev-cluster:
+	$(CURRENT_DIR)/tools/bin/kind delete cluster --name pd-dev
+
 dev-cluster: ## Start a dev server with Tilt
 	$(CURRENT_DIR)/tools/bin/tilt up
 
