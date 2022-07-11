@@ -1,8 +1,8 @@
 package convert
 
 import (
-	"bufio"
 	"bytes"
+	"fmt"
 	"time"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
@@ -12,7 +12,9 @@ import (
 	"gopkg.in/yaml.v3"
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/serializer/json"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment appsv1.Deployment, promoted []v1.Container) *pb.Canary {
@@ -34,12 +36,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 		KustomizeName:      deployment.Labels["kustomize.toolkit.fluxcd.io/name"],
 	}
 
-	// canaryYaml, err := serializeObj(canary)
-	// if err != nil {
-	// 	panic("failed serializing canary")
-	// }
-
-	canaryYaml, _ := yaml.Marshal(canary)
+	canaryYaml, _ := serializeObj(&canary)
 	analysisYaml, _ := yaml.Marshal(canary.Spec.Analysis)
 
 	images := map[string]string{}
@@ -118,16 +115,40 @@ func FlaggerMetricTemplateToProto(template v1beta1.MetricTemplate, clusterName s
 	}
 }
 
-func serializeObj(canary v1beta1.Canary) ([]byte, error) {
+func serializeObj(obj client.Object) ([]byte, error) {
 	scheme := kube.CreateScheme()
-	s := json.NewYAMLSerializer(json.DefaultMetaFactory, scheme, scheme)
 
-	var b bytes.Buffer
-	yamlBuffer := bufio.NewWriter(&b)
-
-	if err := s.Encode(&canary, yamlBuffer); err != nil {
+	if err := setGVKFromScheme(obj, scheme); err != nil {
 		return nil, err
 	}
 
-	return b.Bytes(), nil
+	serializer := json.NewSerializerWithOptions(json.DefaultMetaFactory, scheme, scheme, json.SerializerOptions{
+		Pretty: true,
+		Yaml:   true,
+		Strict: true,
+	})
+
+	buf := bytes.NewBufferString("")
+
+	if err := serializer.Encode(obj, buf); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+// Populate the GVK from scheme, since it is cleared by design on typed objects.
+// https://github.com/kubernetes/client-go/issues/413
+func setGVKFromScheme(object runtime.Object, scheme *runtime.Scheme) error {
+	gvks, unversioned, err := scheme.ObjectKinds(object)
+	if err != nil {
+		return err
+	}
+	if len(gvks) == 0 {
+		return fmt.Errorf("no ObjectKinds available for %T", object)
+	}
+	if !unversioned {
+		object.GetObjectKind().SetGroupVersionKind(gvks[0])
+	}
+	return nil
 }
