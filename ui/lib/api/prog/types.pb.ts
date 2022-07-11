@@ -92,8 +92,8 @@ export type CanaryMetric = {
 }
 
 export type CanaryMetricThresholdRange = {
-  min?: string
-  max?: string
+  min?: number
+  max?: number
 }
 
 export type CanaryMetricTemplate = {

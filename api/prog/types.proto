@@ -91,8 +91,8 @@ message CanaryMetric {
 }
 
 message CanaryMetricThresholdRange {
-  string min = 1;
-  string max = 2;
+  double min = 1;
+  double max = 2;
 }
 
 message CanaryMetricTemplate {

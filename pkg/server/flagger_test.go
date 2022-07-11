@@ -184,7 +184,6 @@ func TestGetCanary(t *testing.T) {
 		string(flagger.BlueGreenDeploymentStrategy),
 		response.GetCanary().GetDeploymentStrategy(),
 	)
-	//TODO: add metrics
 	assert.True(t, len(response.GetCanary().GetAnalysis().Metrics) == 2)
 	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[0], canaryMetric, nil)
 	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithTemplate, canaryMetricTemplate)
@@ -196,7 +195,7 @@ func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.Canar
 		actual.GetName(),
 	)
 	assert.Equal(t,
-		fmt.Sprintf("%f", *expected.ThresholdRange.Min),
+		*expected.ThresholdRange.Min,
 		actual.ThresholdRange.Min,
 	)
 	if expected.TemplateRef != nil {
