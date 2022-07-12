@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	api "github.com/weaveworks/progressive-delivery/pkg/api/prog"
-	"github.com/weaveworks/progressive-delivery/pkg/server"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -19,7 +19,7 @@ func TestListCanaries(t *testing.T) {
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
@@ -58,7 +58,7 @@ func TestListCanaries_NoDeployment(t *testing.T) {
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
@@ -86,7 +86,7 @@ func TestListCanaries_Promoted(t *testing.T) {
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
@@ -125,7 +125,7 @@ func TestGetCanary(t *testing.T) {
 	c := pdtesting.MakeGRPCServer(t, k8sEnv.Rest, k8sEnv)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 

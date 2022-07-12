@@ -1,4 +1,4 @@
-package server
+package kube
 
 import (
 	flaggerv1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"

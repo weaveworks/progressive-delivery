@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-logr/logr"
-	"github.com/weaveworks/progressive-delivery/pkg/server"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr/clustersmngrfakes"
 	"github.com/weaveworks/weave-gitops/core/nsaccess"
@@ -21,7 +21,7 @@ func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, clustersmn
 		fetcher,
 		nsaccess.NewChecker(nsaccess.DefautltWegoAppRules),
 		log,
-		server.CreateScheme(),
+		kube.CreateScheme(),
 	)
 
 	if err := clientsFactory.UpdateClusters(ctx); err != nil {

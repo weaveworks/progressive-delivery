@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
-	"github.com/weaveworks/progressive-delivery/pkg/server"
+	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -19,7 +19,7 @@ func TestFetcher_IsAvailable(t *testing.T) {
 	assert.NoError(t, err)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
@@ -57,7 +57,7 @@ func TestFetcher_IsAvailableOnClusters(t *testing.T) {
 	assert.NoError(t, err)
 
 	k, err := client.New(k8sEnv.Rest, client.Options{
-		Scheme: server.CreateScheme(),
+		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
