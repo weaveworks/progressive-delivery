@@ -8,7 +8,7 @@ spec:
   targetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: deployment01
+    name: podinfo-01
   # the maximum time in seconds for the canary deployment
   # to make progress before it is rollback (default 600s)
   progressDeadlineSeconds: 60
@@ -16,7 +16,7 @@ spec:
   autoscalerRef:
     apiVersion: autoscaling/v2beta2
     kind: HorizontalPodAutoscaler
-    name: podinfo
+    name: podinfo-01
   service:
     # service port number
     port: 9898
@@ -27,7 +27,7 @@ spec:
     - public-gateway.istio-system.svc.cluster.local
     # Istio virtual service host names (optional)
     hosts:
-    - app.example.com
+    - podinfo1.example.com
     # Istio traffic policy (optional)
     trafficPolicy:
       tls:
@@ -66,13 +66,13 @@ spec:
     webhooks:
       - name: acceptance-test
         type: pre-rollout
-        url: http://flagger-loadtester.test/
+        url: http://loadtesterapp.flagger/
         timeout: 30s
         metadata:
           type: bash
-          cmd: "curl -sd 'test' http://canary01-canary:9898/token | grep token"
+          cmd: "curl -sd 'test' http://podinfo-01-canary.canary:9898/token | grep token"
       - name: load-test
-        url: http://flagger-loadtester.test/
+        url: http://loadtesterapp.flagger/
         timeout: 5s
         metadata:
-          cmd: "hey -z 1m -q 10 -c 2 http://canary01-canary.test:9898/"
+          cmd: "hey -z 1m -q 10 -c 2 http://podinfo-01-canary.canary:9898/"
