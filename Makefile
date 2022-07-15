@@ -26,6 +26,9 @@ delete-dev-cluster:
 dev-cluster: ## Start a dev server with Tilt
 	$(CURRENT_DIR)/tools/bin/tilt up
 
+ui/lib/node_modules:
+	cd ui/lib && npm install
+
 ui/lib/dist/index.js: ui/lib/node_modules
 	cd ui/lib && yarn compile
 

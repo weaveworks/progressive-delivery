@@ -397,6 +397,9 @@
         },
         "query": {
           "type": "string"
+        },
+        "yaml": {
+          "type": "string"
         }
       }
     },

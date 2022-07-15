@@ -258,6 +258,7 @@ func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.Canar
 				actual.MetricTemplate.Provider.SecretName,
 			)
 		}
+		assert.NotEmpty(t, actual.MetricTemplate.Yaml)
 	}
 }
 

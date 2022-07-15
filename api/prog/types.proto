@@ -101,6 +101,7 @@ message CanaryMetricTemplate {
   string namespace = 3;
   MetricProvider provider = 4;
   string query = 5;
+  string yaml = 6;
 }
 
 message MetricProvider {

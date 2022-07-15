@@ -78,14 +78,27 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 				}
 			}
 		}
+
+		var thresholdRange *pb.CanaryMetricThresholdRange
+		if metric.ThresholdRange != nil {
+			var min float64
+			var max float64
+			if metric.ThresholdRange.Min != nil {
+				min = *metric.ThresholdRange.Min
+			}
+			if metric.ThresholdRange.Max != nil {
+				max = *metric.ThresholdRange.Max
+			}
+			thresholdRange = &pb.CanaryMetricThresholdRange{
+				Min: min,
+				Max: max,
+			}
+		}
+
 		metrics = append(metrics, &pb.CanaryMetric{
-			Name:     string(metric.Name),
-			Interval: string(metric.Interval),
-			ThresholdRange: &pb.CanaryMetricThresholdRange{
-				Min: "10",
-				//string(metric.ThresholdRange.Min),
-				Max: "10",
-			},
+			Name:           string(metric.Name),
+			Interval:       string(metric.Interval),
+			ThresholdRange: thresholdRange,
 			MetricTemplate: metricTemplate,
 		})
 	}

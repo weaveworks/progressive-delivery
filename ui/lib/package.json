@@ -1,6 +1,6 @@
 {
   "name": "@weaveworks/progressive-delivery",
-  "version": "0.0.0-rc9",
+  "version": "0.0.0-rc10",
   "main": "api/prog/prog.pb.js",
   "types": "api/prog/prog.pb.d.ts",
   "author": "",

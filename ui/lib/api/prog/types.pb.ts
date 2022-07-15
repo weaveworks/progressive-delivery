@@ -102,6 +102,7 @@ export type CanaryMetricTemplate = {
   namespace?: string
   provider?: MetricProvider
   query?: string
+  yaml?: string
 }
 
 export type MetricProvider = {
