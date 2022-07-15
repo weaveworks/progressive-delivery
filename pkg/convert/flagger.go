@@ -3,6 +3,7 @@ package convert
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
@@ -63,6 +64,12 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 					if mt.Spec.Provider.SecretRef != nil {
 						secretRefName = mt.Spec.Provider.SecretRef.Name
 					}
+					metricTemplateYaml, err := serializeObj(&mt)
+					if err != nil {
+						//TODO ask on the strategy to handle errors within the code
+						log.Println("could not create yaml for metric template", err)
+						metricTemplateYaml = []byte{}
+					}
 					metricTemplate = &pb.CanaryMetricTemplate{
 						Namespace:   mt.Namespace,
 						Name:        mt.Name,
@@ -74,6 +81,7 @@ func FlaggerCanaryToProto(canary v1beta1.Canary, clusterName string, deployment 
 							InsecureSkipVerify: mt.Spec.Provider.InsecureSkipVerify,
 						},
 						Query: mt.Spec.Query,
+						Yaml:  string(metricTemplateYaml),
 					}
 				}
 			}
