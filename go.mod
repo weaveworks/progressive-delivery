@@ -16,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.7.2
 	github.com/urfave/cli/v2 v2.8.1
 	github.com/weaveworks/weave-gitops v0.8.1
+	golang.org/x/net v0.0.0-20220513224357-95641704303c
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
 	google.golang.org/grpc v1.46.2
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
@@ -116,7 +117,6 @@ require (
 	go.uber.org/zap v1.21.0 // indirect
 	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9 // indirect
 	golang.org/x/mod v0.6.0-dev.0.20220106191415-9b9b3d81d5e3 // indirect
-	golang.org/x/net v0.0.0-20220513224357-95641704303c // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5 // indirect
 	golang.org/x/sys v0.0.0-20220513210249-45d2b4557a2a // indirect
 	golang.org/x/term v0.0.0-20220411215600-e5f449aeb171 // indirect

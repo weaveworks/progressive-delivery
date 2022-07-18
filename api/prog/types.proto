@@ -79,7 +79,20 @@ message CanaryAnalysis {
   repeated int32 step_weights = 8;
   bool mirror = 9;
   string yaml = 10;
-  repeated CanaryMetricTemplate metric_templates = 11;
+  repeated CanaryMetric metrics = 11;
+}
+
+message CanaryMetric {
+  string name = 1;
+  string namespace = 2;
+  CanaryMetricThresholdRange threshold_range = 3;
+  string interval = 4;
+  CanaryMetricTemplate metric_template = 5;
+}
+
+message CanaryMetricThresholdRange {
+  double min = 1;
+  double max = 2;
 }
 
 message CanaryMetricTemplate {
@@ -88,6 +101,7 @@ message CanaryMetricTemplate {
   string namespace = 3;
   MetricProvider provider = 4;
   string query = 5;
+  string yaml = 6;
 }
 
 message MetricProvider {
