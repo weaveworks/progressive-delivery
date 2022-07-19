@@ -135,25 +135,65 @@ func TestGetCanary(t *testing.T) {
 	_ = pdtesting.NewDeployment(ctx, t, k, appName, ns.Name)
 	_ = pdtesting.NewDeployment(ctx, t, k, fmt.Sprintf("%s-primary", appName), ns.Name)
 
-	tpl := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
-		Name:            appName,
+	canaryMetric := v1beta1.CanaryMetric{
+		Name:     "request-success-rate",
+		Interval: "1m",
+		ThresholdRange: &v1beta1.CanaryThresholdRange{
+			Min: toFloatPtr(90),
+		},
+	}
+	canaryMetricWithoutThreshold := v1beta1.CanaryMetric{
+		Name:     "request-success-rate",
+		Interval: "1m",
+	}
+	canaryMetricTemplate := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+		Name:               fmt.Sprintf("%s-mt", appName),
+		Namespace:          ns.GetName(),
+		ProviderType:       "prometheus",
+		ProviderAddress:    "http://prometheus:9090",
+		Query:              "custom query",
+		ProviderSecretName: "prometheusSecret",
+	})
+	canaryMetricWithTemplate := v1beta1.CanaryMetric{
+		Name:     "my-custom-metric",
+		Interval: "2m",
+		ThresholdRange: &v1beta1.CanaryThresholdRange{
+			Min: toFloatPtr(50.0),
+			Max: toFloatPtr(75.0),
+		},
+		TemplateRef: &v1beta1.CrossNamespaceObjectReference{
+			Name:      canaryMetricTemplate.Name,
+			Namespace: canaryMetricTemplate.Namespace,
+		},
+	}
+	canaryMetricTemplateWithoutSecret := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+		Name:            fmt.Sprintf("%s-mt-no-secret", appName),
 		Namespace:       ns.GetName(),
 		ProviderType:    "prometheus",
 		ProviderAddress: "http://prometheus:9090",
 		Query:           "custom query",
 	})
+	canaryMetricWithTemplateWithoutSecret := v1beta1.CanaryMetric{
+		Name:     "my-custom-metric",
+		Interval: "2m",
+		ThresholdRange: &v1beta1.CanaryThresholdRange{
+			Min: toFloatPtr(50.0),
+			Max: toFloatPtr(75.0),
+		},
+		TemplateRef: &v1beta1.CrossNamespaceObjectReference{
+			Name:      canaryMetricTemplateWithoutSecret.Name,
+			Namespace: canaryMetricTemplateWithoutSecret.Namespace,
+		},
+	}
+
 	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
 		Name:      appName,
 		Namespace: ns.GetName(),
 		Metrics: []v1beta1.CanaryMetric{
-			{
-				TemplateRef: &v1beta1.CrossNamespaceObjectReference{
-					APIVersion: "flagger.app/v1beta1",
-					Kind:       "MetricTemplate",
-					Name:       tpl.GetName(),
-					Namespace:  ns.GetName(),
-				},
-			},
+			canaryMetric,
+			canaryMetricWithoutThreshold,
+			canaryMetricWithTemplate,
+			canaryMetricWithTemplateWithoutSecret,
 		},
 	})
 	defer cleanup(ctx, t, k, &canary)
@@ -169,11 +209,57 @@ func TestGetCanary(t *testing.T) {
 		string(flagger.BlueGreenDeploymentStrategy),
 		response.GetCanary().GetDeploymentStrategy(),
 	)
-	assert.NotEmpty(t, response.GetCanary().GetAnalysis().GetMetricTemplates())
+	assert.True(t, len(response.GetCanary().GetAnalysis().Metrics) == 4)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[0], canaryMetric, nil)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[1], canaryMetricWithoutThreshold, nil)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[2], canaryMetricWithTemplate, canaryMetricTemplate)
+	assertMetric(t, response.GetCanary().GetAnalysis().GetMetrics()[3], canaryMetricWithTemplateWithoutSecret, canaryMetricTemplateWithoutSecret)
+}
+
+func assertMetric(t *testing.T, actual *api.CanaryMetric, expected v1beta1.CanaryMetric, expectedMetricTemplate *v1beta1.MetricTemplate) {
 	assert.Equal(t,
-		response.GetCanary().GetAnalysis().GetMetricTemplates()[0].GetName(),
-		tpl.GetName(),
+		expected.Name,
+		actual.GetName(),
 	)
+	if expected.ThresholdRange != nil {
+		if expected.ThresholdRange.Min != nil {
+			assert.Equal(t,
+				*expected.ThresholdRange.Min,
+				actual.ThresholdRange.Min,
+			)
+		}
+		if expected.ThresholdRange.Max != nil {
+			assert.Equal(t,
+				*expected.ThresholdRange.Max,
+				actual.ThresholdRange.Max,
+			)
+		}
+	}
+	if expected.TemplateRef != nil {
+		assert.Equal(t,
+			expected.TemplateRef.Name,
+			actual.MetricTemplate.Name,
+		)
+		assert.Equal(t,
+			expected.TemplateRef.Namespace,
+			actual.MetricTemplate.Namespace,
+		)
+		assert.Equal(t,
+			expectedMetricTemplate.Spec.Query,
+			actual.MetricTemplate.Query,
+		)
+		assert.Equal(t,
+			expectedMetricTemplate.Spec.Provider.Type,
+			actual.MetricTemplate.Provider.Type,
+		)
+		if expectedMetricTemplate.Spec.Provider.SecretRef != nil {
+			assert.Equal(t,
+				expectedMetricTemplate.Spec.Provider.SecretRef.Name,
+				actual.MetricTemplate.Provider.SecretName,
+			)
+		}
+		assert.Contains(t, actual.MetricTemplate.Yaml, "kind: MetricTemplate")
+	}
 }
 
 func TestIsFlaggerAvailable(t *testing.T) {
@@ -190,4 +276,9 @@ func cleanup(ctx context.Context, t *testing.T, k client.Client, obj client.Obje
 	if err := k.Delete(ctx, obj); err != nil {
 		t.Error(err)
 	}
+}
+
+func toFloatPtr(val int) *float64 {
+	v := float64(val)
+	return &v
 }

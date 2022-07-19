@@ -80,7 +80,20 @@ export type CanaryAnalysis = {
   stepWeights?: number[]
   mirror?: boolean
   yaml?: string
-  metricTemplates?: CanaryMetricTemplate[]
+  metrics?: CanaryMetric[]
+}
+
+export type CanaryMetric = {
+  name?: string
+  namespace?: string
+  thresholdRange?: CanaryMetricThresholdRange
+  interval?: string
+  metricTemplate?: CanaryMetricTemplate
+}
+
+export type CanaryMetricThresholdRange = {
+  min?: number
+  max?: number
 }
 
 export type CanaryMetricTemplate = {
@@ -89,6 +102,7 @@ export type CanaryMetricTemplate = {
   namespace?: string
   provider?: MetricProvider
   query?: string
+  yaml?: string
 }
 
 export type MetricProvider = {
