@@ -6,6 +6,10 @@ This repository contains the progressive delivery API handlers that Weave GitOps
 
 To install all dependencies use `make dependencies`.
 
+## Publish new version
+
+Update `package.json` with the new version and run `make publish-js-lib`
+
 ## Start dev server
 
 Use Tilt to deploy the dev-server on the cluster:
