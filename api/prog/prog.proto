@@ -54,10 +54,10 @@ service ProgressiveDeliveryService {
 
 
     /**
-    * ListFlaggerObjcets returns with a list of related objects for a Canary
+    * ListCanaryObjects returns with a list of related objects for a Canary
     * objects.
     */
-    rpc ListFlaggerObjects(ListFlaggerObjectsRequest) returns (ListFlaggerObjectsResponse) {
+    rpc ListCanaryObjects(ListCanaryObjectsRequest) returns (ListCanaryObjectsResponse) {
         option (google.api.http) = {
             get : "/v1/pd/canary_objects",
         };
@@ -110,14 +110,13 @@ message ListMetricTemplatesResponse {
     repeated ListError errors = 3;
 }
 
-message ListFlaggerObjectsRequest {
+message ListCanaryObjectsRequest {
     string name = 1;
     string namespace = 2;
     string cluster_name = 3;
-    repeated GroupVersionKind kinds = 4;
 
 }
 
-message ListFlaggerObjectsResponse {
+message ListCanaryObjectsResponse {
     repeated UnstructuredObject objects = 1;
 }

@@ -105,13 +105,13 @@
     },
     "/v1/pd/canary_objects": {
       "get": {
-        "summary": "ListFlaggerObjcets returns with a list of related objects for a Canary\nobjects.",
-        "operationId": "ProgressiveDeliveryService_ListFlaggerObjects",
+        "summary": "ListCanaryObjects returns with a list of related objects for a Canary\nobjects.",
+        "operationId": "ProgressiveDeliveryService_ListCanaryObjects",
         "responses": {
           "200": {
             "description": "A successful response.",
             "schema": {
-              "$ref": "#/definitions/ListFlaggerObjectsResponse"
+              "$ref": "#/definitions/ListCanaryObjectsResponse"
             }
           },
           "default": {
@@ -578,6 +578,17 @@
         }
       }
     },
+    "ListCanaryObjectsResponse": {
+      "type": "object",
+      "properties": {
+        "objects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UnstructuredObject"
+          }
+        }
+      }
+    },
     "ListError": {
       "type": "object",
       "properties": {
@@ -589,17 +600,6 @@
         },
         "message": {
           "type": "string"
-        }
-      }
-    },
-    "ListFlaggerObjectsResponse": {
-      "type": "object",
-      "properties": {
-        "objects": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/UnstructuredObject"
-          }
         }
       }
     },

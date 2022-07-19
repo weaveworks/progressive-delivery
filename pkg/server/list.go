@@ -14,8 +14,22 @@ import (
 	"sigs.k8s.io/kustomize/kstatus/status"
 )
 
-func (pd *pdServer) ListFlaggerObjects(ctx context.Context, msg *pb.ListFlaggerObjectsRequest) (*pb.ListFlaggerObjectsResponse, error) {
+// list of kinds flagger creates depending on the underlying service mesh used.
+var generatedObjectsKinds = []schema.GroupVersionKind{
+	// all canaries
+	{Group: "", Version: "v1", Kind: "Service"},
+	{Group: "apps", Version: "v1", Kind: "Deployment"},
+	{Group: "autoscaling", Version: "v1", Kind: "HorizontalPodAutoscaler"},
+	// TODO: we need to detect which service is being used and query its objects types.
+	// Maybe borrow some logic from Flagger.
+	// Linkerd
+	// {Group: "split.smi-spec.io", Version: "v1alpha2", Kind: "trafficsplit"},
+	// Istio
+	// {Group: "networking.istio.io", Version: "v1alpha3", Kind: "destinationrules"},
+	// {Group: "networking.istio.io", Version: "v1alpha3", Kind: "virtualservices"},
+}
 
+func (pd *pdServer) ListCanaryObjects(ctx context.Context, msg *pb.ListCanaryObjectsRequest) (*pb.ListCanaryObjectsResponse, error) {
 	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("error getting impersonating client: %w", err)
@@ -71,7 +85,7 @@ func (pd *pdServer) ListFlaggerObjects(ctx context.Context, msg *pb.ListFlaggerO
 		}
 	}
 
-	for _, gvk := range msg.Kinds {
+	for _, gvk := range generatedObjectsKinds {
 		listResult := unstructured.UnstructuredList{}
 
 		listResult.SetGroupVersionKind(schema.GroupVersionKind{
@@ -143,5 +157,5 @@ func (pd *pdServer) ListFlaggerObjects(ctx context.Context, msg *pb.ListFlaggerO
 		})
 	}
 
-	return &pb.ListFlaggerObjectsResponse{Objects: objects}, nil
+	return &pb.ListCanaryObjectsResponse{Objects: objects}, nil
 }

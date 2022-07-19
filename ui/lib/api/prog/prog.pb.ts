@@ -53,14 +53,13 @@ export type ListMetricTemplatesResponse = {
   errors?: Types.ListError[]
 }
 
-export type ListFlaggerObjectsRequest = {
+export type ListCanaryObjectsRequest = {
   name?: string
   namespace?: string
   clusterName?: string
-  kinds?: Types.GroupVersionKind[]
 }
 
-export type ListFlaggerObjectsResponse = {
+export type ListCanaryObjectsResponse = {
   objects?: Types.UnstructuredObject[]
 }
 
@@ -80,7 +79,7 @@ export class ProgressiveDeliveryService {
   static ListMetricTemplates(req: ListMetricTemplatesRequest, initReq?: fm.InitReq): Promise<ListMetricTemplatesResponse> {
     return fm.fetchReq<ListMetricTemplatesRequest, ListMetricTemplatesResponse>(`/v1/pd/metric_templates?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
-  static ListFlaggerObjects(req: ListFlaggerObjectsRequest, initReq?: fm.InitReq): Promise<ListFlaggerObjectsResponse> {
-    return fm.fetchReq<ListFlaggerObjectsRequest, ListFlaggerObjectsResponse>(`/v1/pd/canary_objects?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
+  static ListCanaryObjects(req: ListCanaryObjectsRequest, initReq?: fm.InitReq): Promise<ListCanaryObjectsResponse> {
+    return fm.fetchReq<ListCanaryObjectsRequest, ListCanaryObjectsResponse>(`/v1/pd/canary_objects?${fm.renderURLSearchParams(req, [])}`, {...initReq, method: "GET"})
   }
 }
