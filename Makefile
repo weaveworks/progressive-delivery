@@ -1,4 +1,4 @@
-.PHONY: proto test lint tools dependencies js-lib clean dev-server
+.PHONY: proto test lint tools dependencies js-lib publish clean dev-server
 
 CURRENT_DIR := $(shell pwd)
 
@@ -34,8 +34,12 @@ ui/lib/dist/index.js: ui/lib/node_modules
 
 ui/lib/dist/package.json: ui/lib/package.json
 	cp ui/lib/package.json ui/lib/dist
+	cp ui/lib/.npmrc ui/lib/dist
 
 js-lib: ui/lib/dist/index.js ui/lib/dist/package.json
+
+publish-js-lib: js-lib
+	cd ui/lib/dist && npm publish
 
 clean:
 	rm -rf ui/lib/dist
