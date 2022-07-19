@@ -20,7 +20,7 @@ var generatedObjectsKinds = []schema.GroupVersionKind{
 	{Group: "", Version: "v1", Kind: "Service"},
 	{Group: "apps", Version: "v1", Kind: "Deployment"},
 	{Group: "autoscaling", Version: "v1", Kind: "HorizontalPodAutoscaler"},
-	// TODO: we need to detect which service is beeing used and query its objects types.
+	// TODO: we need to detect which service is being used and query its objects types.
 	// Maybe borrow some logic from Flagger.
 	// Linkerd
 	// {Group: "split.smi-spec.io", Version: "v1alpha2", Kind: "trafficsplit"},
