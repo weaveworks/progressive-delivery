@@ -20,8 +20,8 @@ func getRef(
 ) (unstructured.Unstructured, error) {
 	object := unstructured.Unstructured{}
 	key := client.ObjectKey{
-		Namespace: ref.Name,
-		Name:      ns,
+		Name:      ref.Name,
+		Namespace: ns,
 	}
 
 	object.SetGroupVersionKind(schema.GroupVersionKind{
