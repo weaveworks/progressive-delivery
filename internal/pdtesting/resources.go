@@ -52,9 +52,14 @@ func NewCanary(
 				Kind:       "Deployment",
 				Name:       info.Name,
 			},
+			IngressRef: &v1beta1.LocalObjectReference{
+				APIVersion: "networking.k8s.io/v1",
+				Kind:       "Ingress",
+				Name:       info.Name,
+			},
 			SkipAnalysis: false,
 			AutoscalerRef: &v1beta1.LocalObjectReference{
-				APIVersion: "autoscaling/v2",
+				APIVersion: "autoscaling/v2beta1",
 				Kind:       "HorizontalPodAutoscaler",
 				Name:       info.Name,
 			},
@@ -147,7 +152,6 @@ func NewCRD(
 	k client.Client,
 	info CRDInfo,
 ) v1.CustomResourceDefinition {
-
 	resource := v1.CustomResourceDefinition{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: fmt.Sprintf("%s.%s", info.Plural, info.Group),

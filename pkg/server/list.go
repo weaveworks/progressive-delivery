@@ -55,15 +55,16 @@ func (pd *pdServer) ListCanaryObjects(ctx context.Context, msg *pb.ListCanaryObj
 		canary.GetNamespace(),
 		msg.GetClusterName(),
 	)
-	if err == nil {
-		result = append(result, targetDeployment)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting canary target reference: %w", err)
 	}
+	result = append(result, targetDeployment)
 
 	if canary.Spec.IngressRef != nil {
 		ingress, err := getRef(
 			ctx,
 			clusterClient,
-			canary.Spec.AutoscalerRef,
+			canary.Spec.IngressRef,
 			canary.GetNamespace(),
 			msg.GetClusterName(),
 		)
