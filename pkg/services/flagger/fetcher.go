@@ -6,9 +6,14 @@ import (
 	"fmt"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
+	"github.com/go-logr/logr"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	v1 "k8s.io/api/apps/v1"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -20,16 +25,18 @@ type Fetcher interface {
 	GetMetricTemplate(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, name, namespace string) (v1beta1.MetricTemplate, error)
 	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
 	ListMetricTemplates(ctx context.Context, clusterClient clustersmngr.Client, options ListMetricTemplatesOptions) (map[string][]v1beta1.MetricTemplate, string, []MetricTemplateListError, error)
+	ListCanaryObjects(ctx context.Context, clusterClient clustersmngr.Client, opts ListCanaryObjectsOptions) ([]unstructured.Unstructured, error)
 }
 
-func NewFetcher(crdService crd.Fetcher) Fetcher {
-	fetcher := &defaultFetcher{crdService: crdService}
+func NewFetcher(crdService crd.Fetcher, logger logr.Logger) Fetcher {
+	fetcher := &defaultFetcher{crdService: crdService, logger: logger}
 
 	return fetcher
 }
 
 type defaultFetcher struct {
 	crdService crd.Fetcher
+	logger     logr.Logger
 }
 
 type ListCanaryDeploymentsOptions struct {
@@ -45,6 +52,12 @@ type ListMetricTemplatesOptions struct {
 }
 
 type GetCanaryOptions struct {
+	Name        string
+	Namespace   string
+	ClusterName string
+}
+
+type ListCanaryObjectsOptions struct {
 	Name        string
 	Namespace   string
 	ClusterName string
@@ -239,6 +252,109 @@ func (service *defaultFetcher) ListMetricTemplates(
 	return results, clist.GetContinue(), respErrors, nil
 }
 
+func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterClient clustersmngr.Client, opts ListCanaryObjectsOptions) ([]unstructured.Unstructured, error) {
+	result := []unstructured.Unstructured{}
+	checkDup := map[types.UID]bool{}
+
+	// Get canary object
+	canary, err := service.GetCanary(ctx, clusterClient, GetCanaryOptions{
+		Name:        opts.Name,
+		Namespace:   opts.Namespace,
+		ClusterName: opts.ClusterName,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to find canary object: %w", err)
+	}
+
+	targetDeployment, err := getRef(
+		ctx,
+		clusterClient,
+		&canary.Spec.TargetRef,
+		canary.GetNamespace(),
+		opts.ClusterName,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed getting canary target reference: %w", err)
+	}
+	result = append(result, targetDeployment)
+
+	if canary.Spec.IngressRef != nil {
+		ingress, err := getRef(
+			ctx,
+			clusterClient,
+			canary.Spec.IngressRef,
+			canary.GetNamespace(),
+			opts.ClusterName,
+		)
+		if err == nil {
+			result = append(result, ingress)
+		}
+	}
+
+	if canary.Spec.AutoscalerRef != nil {
+		hpa, err := getRef(
+			ctx,
+			clusterClient,
+			canary.Spec.AutoscalerRef,
+			canary.GetNamespace(),
+			opts.ClusterName,
+		)
+		if err == nil {
+			result = append(result, hpa)
+		}
+	}
+
+	// List of kinds all canaries generate independently of mesh provider
+	coreObjectsKinds := []schema.GroupVersionKind{
+		{Group: "", Version: "v1", Kind: "Service"},
+		{Group: "apps", Version: "v1", Kind: "Deployment"},
+		{Group: "autoscaling", Version: "v2beta1", Kind: "HorizontalPodAutoscaler"},
+	}
+
+	for _, gvk := range coreObjectsKinds {
+		listResult := unstructured.UnstructuredList{}
+
+		listResult.SetGroupVersionKind(schema.GroupVersionKind{
+			Group:   gvk.Group,
+			Kind:    gvk.Kind,
+			Version: gvk.Version,
+		})
+
+		if err := clusterClient.List(ctx, opts.ClusterName, &listResult); err != nil {
+			if k8serrors.IsForbidden(err) {
+				service.logger.Error(err, "request is forbidden")
+
+				continue
+			}
+
+			return nil, fmt.Errorf("error listing unstructured object: %w", err)
+		}
+
+	ItemsLoop:
+		for _, obj := range listResult.Items {
+			refs := obj.GetOwnerReferences()
+			if len(refs) == 0 {
+				continue
+			}
+
+			for _, ref := range refs {
+				if ref.UID != canary.GetUID() {
+					continue ItemsLoop
+				}
+			}
+
+			uid := obj.GetUID()
+
+			if !checkDup[uid] {
+				result = append(result, obj)
+				checkDup[uid] = true
+			}
+		}
+	}
+
+	return result, nil
+}
+
 func getDeployment(ctx context.Context, clusterName string, c clustersmngr.Client, name string, namespace string) (v1.Deployment, error) {
 	deployment := v1.Deployment{}
 
@@ -250,4 +366,21 @@ func getDeployment(ctx context.Context, clusterName string, c clustersmngr.Clien
 	err := c.Get(ctx, clusterName, key, &deployment)
 
 	return deployment, err
+}
+
+func getRef(ctx context.Context, clusterClient clustersmngr.Client, ref *v1beta1.LocalObjectReference, ns string, clusterName string) (unstructured.Unstructured, error) {
+	object := unstructured.Unstructured{}
+	key := client.ObjectKey{
+		Name:      ref.Name,
+		Namespace: ns,
+	}
+
+	object.SetGroupVersionKind(schema.GroupVersionKind{
+		Kind:    ref.Kind,
+		Version: ref.APIVersion,
+	})
+
+	err := clusterClient.Get(ctx, clusterName, key, &object)
+
+	return object, err
 }

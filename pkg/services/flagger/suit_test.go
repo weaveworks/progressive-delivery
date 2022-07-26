@@ -5,6 +5,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/go-logr/logr"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
@@ -36,6 +37,5 @@ func newService(ctx context.Context, k8sEnv *testutils.K8sTestEnv) (clustersmngr
 	}
 
 	crdSrv := crd.NewNoCacheFetcher(clientFactory)
-
-	return cl, flagger.NewFetcher(crdSrv), nil
+	return cl, flagger.NewFetcher(crdSrv, logr.Discard()), nil
 }
