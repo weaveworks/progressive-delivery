@@ -6,11 +6,13 @@ import (
 	"fmt"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
+	flaggerv1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	"github.com/go-logr/logr"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	v1 "k8s.io/api/apps/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
+	apimeta "k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
@@ -309,21 +311,26 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 		{Group: "", Version: "v1", Kind: "Service"},
 		{Group: "apps", Version: "v1", Kind: "Deployment"},
 		{Group: "autoscaling", Version: "v2beta1", Kind: "HorizontalPodAutoscaler"},
+		{Group: "networking.k8s.io", Version: "v1", Kind: "Ingress"},
 	}
 
-	for _, gvk := range coreObjectsKinds {
+	objectsKinds := append(coreObjectsKinds, meshProviderObjectKinds(flaggerv1.LinkerdProvider)...)
+
+	for _, gvk := range objectsKinds {
 		listResult := unstructured.UnstructuredList{}
 
-		listResult.SetGroupVersionKind(schema.GroupVersionKind{
-			Group:   gvk.Group,
-			Kind:    gvk.Kind,
-			Version: gvk.Version,
-		})
+		listResult.SetGroupVersionKind(gvk)
 
 		if err := clusterClient.List(ctx, opts.ClusterName, &listResult); err != nil {
 			if k8serrors.IsForbidden(err) {
 				service.logger.Error(err, "request is forbidden")
 
+				continue
+			}
+
+			// Given Flux supports multiple version of the same CRD we need to avoid
+			// breaking when we query a version that's not present on the cluster.
+			if apimeta.IsNoMatchError(err) {
 				continue
 			}
 
@@ -383,4 +390,62 @@ func getRef(ctx context.Context, clusterClient clustersmngr.Client, ref *v1beta1
 	err := clusterClient.Get(ctx, clusterName, key, &object)
 
 	return object, err
+}
+
+func meshProviderObjectKinds(provider string) []schema.GroupVersionKind {
+	var kinds []schema.GroupVersionKind
+	switch provider {
+	case flaggerv1.AppMeshProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "appmesh.k8s.aws", Version: "v1beta2", Kind: "virtualnode"},
+			{Group: "appmesh.k8s.aws", Version: "v1beta2", Kind: "virtualrouter"},
+			{Group: "appmesh.k8s.aws", Version: "v1beta2", Kind: "virtualservice"},
+		}
+	case flaggerv1.LinkerdProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "split.smi-spec.io", Version: "v1alpha1", Kind: "trafficsplit"},
+			{Group: "split.smi-spec.io", Version: "v1alpha2", Kind: "trafficsplit"},
+			{Group: "split.smi-spec.io", Version: "v1alpha3", Kind: "trafficsplit"},
+		}
+	case flaggerv1.IstioProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "networking.istio.io", Version: "v1alpha3", Kind: "destinationrule"},
+			{Group: "networking.istio.io", Version: "v1alpha3", Kind: "virtualservice"},
+		}
+	case flaggerv1.ContourProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "projectcontour.io", Version: "v1", Kind: "httpproxy"},
+		}
+	case flaggerv1.GlooProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "gateway.solo.io", Version: "v1", Kind: "routetable"},
+			{Group: "gloo.solo.io", Version: "v1", Kind: "upstream"},
+		}
+	case flaggerv1.NGINXProvider:
+		// pass: Requires Ingress
+		kinds = []schema.GroupVersionKind{}
+	case flaggerv1.SkipperProvider:
+		// pass: Requires Ingress
+		kinds = []schema.GroupVersionKind{}
+	case flaggerv1.TraefikProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "traefik.containo.us", Version: "v1alpha1", Kind: "traefikservice"},
+		}
+	case flaggerv1.OsmProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "split.smi-spec.io", Version: "v1alpha3", Kind: "trafficsplit"},
+		}
+	case flaggerv1.KumaProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "kuma.io", Version: "v1alpha1", Kind: "trafficroute"},
+		}
+	case flaggerv1.GatewayAPIProvider:
+		kinds = []schema.GroupVersionKind{
+			{Group: "gateway.networking.k8s.io", Version: "v1alpha2", Kind: "httproute"},
+		}
+	case flaggerv1.KubernetesProvider:
+		kinds = []schema.GroupVersionKind{}
+	}
+
+	return kinds
 }

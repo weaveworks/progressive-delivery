@@ -70,5 +70,4 @@ func TestFetcher_ListMetricTemplate(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, cerrs)
 	assert.NotEmpty(t, templates["Default"])
-
 }

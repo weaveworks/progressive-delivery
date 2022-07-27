@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
+	smiv1alpha1 "github.com/fluxcd/flagger/pkg/apis/smi/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/weaveworks/progressive-delivery/internal/pdtesting"
@@ -14,6 +15,7 @@ import (
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	hpav2 "k8s.io/api/autoscaling/v2beta1"
 	netv1 "k8s.io/api/networking/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -283,7 +285,16 @@ func TestListCanaryObjects(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, listObjects.GetObjects()[3].GroupVersionKind.Kind, "Deployment")
 		require.Equal(t, listObjects.GetObjects()[3].Name, createdDplName)
+	})
 
+	t.Run("fetch mesh provider resources", func(t *testing.T) {
+		createdTs := newTrafficSplit(ctx, t, k, appName, ns.Name)
+		updateOwnerReferences(t, k, createdTs, canary)
+
+		listObjects, err := c.ListCanaryObjects(ctx, &api.ListCanaryObjectsRequest{ClusterName: "Default", Name: canary.Name, Namespace: canary.Namespace})
+		require.NoError(t, err)
+		require.Equal(t, listObjects.GetObjects()[4].GroupVersionKind.Kind, "TrafficSplit")
+		require.Equal(t, listObjects.GetObjects()[4].Name, appName)
 	})
 }
 
@@ -411,4 +422,28 @@ func newAutoScaler(ctx context.Context, t *testing.T, k client.Client, name stri
 	assert.NoError(t, err, "should be able to create HPA: %s", hpa.GetName())
 
 	return hpa
+}
+
+func newTrafficSplit(ctx context.Context, t *testing.T, k client.Client, name string, ns string) *smiv1alpha1.TrafficSplit {
+	ts := &smiv1alpha1.TrafficSplit{
+		TypeMeta: metav1.TypeMeta{APIVersion: smiv1alpha1.SchemeGroupVersion.String()},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: ns,
+			Name:      name,
+		},
+		Spec: smiv1alpha1.TrafficSplitSpec{
+			Service: name,
+			Backends: []smiv1alpha1.TrafficSplitBackend{
+				{
+					Service: name,
+					Weight:  resource.NewQuantity(*pointer.Int64(0), resource.DecimalSI),
+				},
+			},
+		},
+	}
+
+	err := k.Create(ctx, ts)
+	assert.NoError(t, err, "should be able to create TrafficSplit: %s", ts.GetName())
+
+	return ts
 }
