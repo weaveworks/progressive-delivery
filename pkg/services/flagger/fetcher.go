@@ -37,9 +37,8 @@ func NewFetcher(crdService crd.Fetcher, logger logr.Logger) Fetcher {
 }
 
 type defaultFetcher struct {
-	k8sServerClient client.Client
-	crdService      crd.Fetcher
-	logger          logr.Logger
+	crdService crd.Fetcher
+	logger     logr.Logger
 }
 
 type ListCanaryDeploymentsOptions struct {
@@ -260,11 +259,7 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 	checkDup := map[types.UID]bool{}
 
 	// Get canary object
-	canary, err := service.GetCanary(ctx, clusterClient, GetCanaryOptions{
-		Name:        opts.Name,
-		Namespace:   opts.Namespace,
-		ClusterName: opts.ClusterName,
-	})
+	canary, err := service.GetCanary(ctx, clusterClient, GetCanaryOptions(opts))
 	if err != nil {
 		return nil, fmt.Errorf("unable to find canary object: %w", err)
 	}
