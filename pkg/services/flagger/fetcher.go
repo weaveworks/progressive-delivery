@@ -37,8 +37,9 @@ func NewFetcher(crdService crd.Fetcher, logger logr.Logger) Fetcher {
 }
 
 type defaultFetcher struct {
-	crdService crd.Fetcher
-	logger     logr.Logger
+	k8sServerClient client.Client
+	crdService      crd.Fetcher
+	logger          logr.Logger
 }
 
 type ListCanaryDeploymentsOptions struct {
@@ -311,10 +312,9 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 		{Group: "", Version: "v1", Kind: "Service"},
 		{Group: "apps", Version: "v1", Kind: "Deployment"},
 		{Group: "autoscaling", Version: "v2beta1", Kind: "HorizontalPodAutoscaler"},
-		{Group: "networking.k8s.io", Version: "v1", Kind: "Ingress"},
 	}
 
-	objectsKinds := append(coreObjectsKinds, meshProviderObjectKinds(flaggerv1.LinkerdProvider)...)
+	objectsKinds := append(coreObjectsKinds, meshProviderObjectKinds(canary.Spec.Provider)...)
 
 	for _, gvk := range objectsKinds {
 		listResult := unstructured.UnstructuredList{}
@@ -331,6 +331,7 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 			// Given Flux supports multiple version of the same CRD we need to avoid
 			// breaking when we query a version that's not present on the cluster.
 			if apimeta.IsNoMatchError(err) {
+				service.logger.Error(err, "failed listing mesh provider resource: %w", err)
 				continue
 			}
 
@@ -393,7 +394,12 @@ func getRef(ctx context.Context, clusterClient clustersmngr.Client, ref *v1beta1
 }
 
 func meshProviderObjectKinds(provider string) []schema.GroupVersionKind {
-	var kinds []schema.GroupVersionKind
+	kinds := []schema.GroupVersionKind{}
+
+	if provider == "" {
+		return kinds
+	}
+
 	switch provider {
 	case flaggerv1.AppMeshProvider:
 		kinds = []schema.GroupVersionKind{
@@ -422,11 +428,13 @@ func meshProviderObjectKinds(provider string) []schema.GroupVersionKind {
 			{Group: "gloo.solo.io", Version: "v1", Kind: "upstream"},
 		}
 	case flaggerv1.NGINXProvider:
-		// pass: Requires Ingress
-		kinds = []schema.GroupVersionKind{}
+		kinds = []schema.GroupVersionKind{
+			{Group: "networking.k8s.io", Version: "v1", Kind: "Ingress"},
+		}
 	case flaggerv1.SkipperProvider:
-		// pass: Requires Ingress
-		kinds = []schema.GroupVersionKind{}
+		kinds = []schema.GroupVersionKind{
+			{Group: "networking.k8s.io", Version: "v1", Kind: "Ingress"},
+		}
 	case flaggerv1.TraefikProvider:
 		kinds = []schema.GroupVersionKind{
 			{Group: "traefik.containo.us", Version: "v1alpha1", Kind: "traefikservice"},
