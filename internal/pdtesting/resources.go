@@ -46,7 +46,7 @@ func NewCanary(
 			Namespace: info.Namespace,
 		},
 		Spec: v1beta1.CanarySpec{
-			Provider: "traefik",
+			Provider: "linkerd",
 			TargetRef: v1beta1.LocalObjectReference{
 				APIVersion: "apps/v1",
 				Kind:       "Deployment",

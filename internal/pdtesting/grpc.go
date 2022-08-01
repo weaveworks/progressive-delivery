@@ -52,6 +52,7 @@ func MakeGRPCServer(
 	opts := server.ServerOpts{
 		ClientFactory: clientsFactory,
 		CRDService:    crd.NewNoCacheFetcher(clientsFactory),
+		Logger:        logr.Discard(),
 	}
 
 	pdServer, _ := server.NewProgressiveDeliveryServer(opts)

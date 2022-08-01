@@ -46,7 +46,7 @@ func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServic
 		opts.CRDService = crd.NewFetcher(ctx, opts.Logger, opts.ClientFactory)
 	}
 
-	flaggerService := flagger.NewFetcher(opts.CRDService)
+	flaggerService := flagger.NewFetcher(opts.CRDService, opts.Logger)
 
 	return &pdServer{
 		clientsFactory: opts.ClientFactory,

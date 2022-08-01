@@ -1,7 +1,7 @@
 package kube
 
 import (
-	flaggerv1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
+	flaggerscheme "github.com/fluxcd/flagger/pkg/client/clientset/versioned/scheme"
 	helmv2 "github.com/fluxcd/helm-controller/api/v2beta1"
 	kustomizev2 "github.com/fluxcd/kustomize-controller/api/v1beta2"
 	sourcev1 "github.com/fluxcd/source-controller/api/v1beta2"
@@ -23,9 +23,9 @@ func CreateScheme() *apiruntime.Scheme {
 	_ = extensionsv1.AddToScheme(scheme)
 	_ = appsv1.AddToScheme(scheme)
 	_ = rbacv1.AddToScheme(scheme)
-	_ = flaggerv1.AddToScheme(scheme)
 	_ = netv1.AddToScheme(scheme)
 	_ = hpav2.AddToScheme(scheme)
+	_ = flaggerscheme.AddToScheme(scheme)
 
 	return scheme
 }
