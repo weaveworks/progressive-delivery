@@ -318,7 +318,7 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 
 		if err := clusterClient.List(ctx, opts.ClusterName, &listResult); err != nil {
 			if k8serrors.IsForbidden(err) {
-				service.logger.Error(err, "request is forbidden")
+				service.logger.Error(err, "request is forbidden", "cluster", opts.ClusterName)
 
 				continue
 			}
@@ -326,7 +326,7 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 			// Given Flux supports multiple version of the same CRD we need to avoid
 			// breaking when we query a version that's not present on the cluster.
 			if apimeta.IsNoMatchError(err) {
-				service.logger.Error(err, "failed listing mesh provider resource: %w", err)
+				service.logger.Error(err, "failed listing mesh provider resource", "cluster", opts.ClusterName)
 				continue
 			}
 
