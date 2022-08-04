@@ -119,4 +119,5 @@ message ListCanaryObjectsRequest {
 
 message ListCanaryObjectsResponse {
     repeated UnstructuredObject objects = 1;
+    repeated ListError errors = 2;
 }

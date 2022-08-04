@@ -586,6 +586,12 @@
           "items": {
             "$ref": "#/definitions/UnstructuredObject"
           }
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ListError"
+          }
         }
       }
     },

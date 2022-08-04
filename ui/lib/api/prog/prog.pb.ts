@@ -61,6 +61,7 @@ export type ListCanaryObjectsRequest = {
 
 export type ListCanaryObjectsResponse = {
   objects?: Types.UnstructuredObject[]
+  errors?: Types.ListError[]
 }
 
 export class ProgressiveDeliveryService {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/go-multierror"
 	pb "github.com/weaveworks/progressive-delivery/pkg/api/prog"
 	"github.com/weaveworks/progressive-delivery/pkg/services/flagger"
 	"github.com/weaveworks/weave-gitops/pkg/server/auth"
@@ -16,13 +17,20 @@ func (pd *pdServer) ListCanaryObjects(ctx context.Context, msg *pb.ListCanaryObj
 		return nil, fmt.Errorf("error getting impersonating client: %w", err)
 	}
 
+	respErrors := []*pb.ListError{}
 	result, err := pd.flagger.ListCanaryObjects(ctx, clusterClient, flagger.ListCanaryObjectsOptions{
 		Name:        msg.Name,
 		Namespace:   msg.Namespace,
 		ClusterName: msg.ClusterName,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed listing canary objects: %w", err)
+		if merr, ok := err.(*multierror.Error); ok {
+			for _, err := range merr.Errors {
+				respErrors = append(respErrors, &pb.ListError{ClusterName: msg.ClusterName, Namespace: msg.Namespace, Message: err.Error()})
+			}
+		} else {
+			return nil, fmt.Errorf("failed listing canary objects: %w", err)
+		}
 	}
 
 	objects := []*pb.UnstructuredObject{}
@@ -56,5 +64,5 @@ func (pd *pdServer) ListCanaryObjects(ctx context.Context, msg *pb.ListCanaryObj
 		})
 	}
 
-	return &pb.ListCanaryObjectsResponse{Objects: objects}, nil
+	return &pb.ListCanaryObjectsResponse{Objects: objects, Errors: respErrors}, nil
 }
