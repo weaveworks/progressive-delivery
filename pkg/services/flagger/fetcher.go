@@ -8,6 +8,7 @@ import (
 	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	flaggerv1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	"github.com/go-logr/logr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
 	v1 "k8s.io/api/apps/v1"
@@ -311,22 +312,25 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 
 	objectsKinds := append(coreObjectsKinds, meshProviderObjectKinds(canary.Spec.Provider)...)
 
+	var merr *multierror.Error
+
 	for _, gvk := range objectsKinds {
 		listResult := unstructured.UnstructuredList{}
 
 		listResult.SetGroupVersionKind(gvk)
 
 		if err := clusterClient.List(ctx, opts.ClusterName, &listResult); err != nil {
-			if k8serrors.IsForbidden(err) {
-				service.logger.Error(err, "request is forbidden", "cluster", opts.ClusterName)
-
-				continue
-			}
-
 			// Given Flux supports multiple version of the same CRD we need to avoid
 			// breaking when we query a version that's not present on the cluster.
 			if apimeta.IsNoMatchError(err) {
 				service.logger.Error(err, "failed listing mesh provider resource", "cluster", opts.ClusterName)
+				continue
+			}
+
+			if k8serrors.IsForbidden(err) {
+				service.logger.Error(err, "request is forbidden", "cluster", opts.ClusterName)
+
+				merr = multierror.Append(merr, err)
 				continue
 			}
 
@@ -355,7 +359,7 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 		}
 	}
 
-	return result, nil
+	return result, merr.ErrorOrNil()
 }
 
 func getDeployment(ctx context.Context, clusterName string, c clustersmngr.Client, name string, namespace string) (v1.Deployment, error) {
