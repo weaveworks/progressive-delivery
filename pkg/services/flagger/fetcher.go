@@ -93,9 +93,8 @@ func (service *defaultFetcher) ListCanaryDeployments(
 		}
 
 		for _, e := range errs.Errors {
-			// If flagger is not installed, skip all errors reported from that
-			// cluster, an extra error will be appended to the error list later if
-			// Flagger is not available.
+			// If Flagger is not installed, skip all errors reported from that
+			// cluster, will log an error later if Flagger is not available.
 			if service.crdService.IsAvailable(e.Cluster, crd.FlaggerCRDName) {
 				respErrors = append(respErrors, CanaryListError{ClusterName: e.Cluster, Err: e.Err})
 			}
@@ -105,16 +104,13 @@ func (service *defaultFetcher) ListCanaryDeployments(
 	results := map[string][]v1beta1.Canary{}
 
 	for clusterName, lists := range clist.Lists() {
-		// The error will be in there from ClusteredListError, adding an extra
-		// error so it's easier to check them on client side.
+		// log an error if Flagger is not available on a cluster.
 		if !service.crdService.IsAvailable(clusterName, crd.FlaggerCRDName) {
-			respErrors = append(
-				respErrors,
-				CanaryListError{
-					ClusterName: clusterName,
-					Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
-				},
-			)
+			e := CanaryListError{
+				ClusterName: clusterName,
+				Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
+			}
+			service.logger.Error(nil, e.Error())
 			results[clusterName] = []v1beta1.Canary{}
 
 			continue
@@ -215,9 +211,8 @@ func (service *defaultFetcher) ListMetricTemplates(
 		}
 
 		for _, e := range errs.Errors {
-			// If flagger is not installed, skip all errors reported from that
-			// cluster, an extra error will be appended to the error list later if
-			// Flagger is not available.
+			// If Flagger is not installed, skip all errors reported from that
+			// cluster, will log an error later if Flagger is not available.
 			if service.crdService.IsAvailable(e.Cluster, crd.FlaggerCRDName) {
 				respErrors = append(respErrors, MetricTemplateListError{ClusterName: e.Cluster, Err: e.Err})
 			}
@@ -227,16 +222,13 @@ func (service *defaultFetcher) ListMetricTemplates(
 	results := map[string][]v1beta1.MetricTemplate{}
 
 	for clusterName, lists := range clist.Lists() {
-		// The error will be in there from ClusteredListError, adding an extra
-		// error so it's easier to check them on client side.
+		// log an error if Flagger is not available on a cluster.
 		if !service.crdService.IsAvailable(clusterName, crd.FlaggerCRDName) {
-			respErrors = append(
-				respErrors,
-				MetricTemplateListError{
-					ClusterName: clusterName,
-					Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
-				},
-			)
+			e := MetricTemplateListError{
+				ClusterName: clusterName,
+				Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
+			}
+			service.logger.Error(nil, e.Error())
 			results[clusterName] = []v1beta1.MetricTemplate{}
 
 			continue
