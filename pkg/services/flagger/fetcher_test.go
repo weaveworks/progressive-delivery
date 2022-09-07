@@ -2,7 +2,6 @@ package flagger_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -17,25 +16,28 @@ func TestFetcher_GetMetricTemplate(t *testing.T) {
 
 	defer cancelFn()
 
-	cl, service, err := newService(ctx, k8sEnv)
-	assert.NoError(t, err)
-
 	k, err := client.New(k8sEnv.Rest, client.Options{
 		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
-	appName := "example"
-
+	// create namespace before creating service to
+	// prevent ns access issues
 	ns := pdtesting.NewNamespace(ctx, t, k)
 
-	_ = pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+	cl, service, err := newService(ctx, k8sEnv)
+	assert.NoError(t, err)
+
+	appName := "example"
+
+	metricTemplate := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
 		Name:            appName,
 		Namespace:       ns.GetName(),
 		ProviderType:    "prometheus",
 		ProviderAddress: "http://prometheus:9090",
 		Query:           "custom query",
 	})
+	defer pdtesting.Cleanup(ctx, t, k, metricTemplate)
 
 	template, err := service.GetMetricTemplate(ctx, "Default", cl, appName, ns.GetName())
 	assert.NoError(t, err)
@@ -47,25 +49,28 @@ func TestFetcher_ListMetricTemplate(t *testing.T) {
 
 	defer cancelFn()
 
+	k, err := client.New(k8sEnv.Rest, client.Options{
+		Scheme: kube.CreateScheme(),
+	})
+	assert.NoError(t, err)
+
+	// create namespace before creating service to
+	// prevent ns access issues
+	ns := pdtesting.NewNamespace(ctx, t, k)
+
 	cl, service, err := newService(ctx, k8sEnv)
 	assert.NoError(t, err)
 
-	// k, err := client.New(k8sEnv.Rest, client.Options{
-	// 	Scheme: kube.CreateScheme(),
-	// })
-	// assert.NoError(t, err)
+	appName := "example"
 
-	// appName := "example"
-
-	// ns := pdtesting.NewNamespace(ctx, t, k)
-
-	// _ = pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
-	// 	Name:            appName,
-	// 	Namespace:       ns.GetName(),
-	// 	ProviderType:    "prometheus",
-	// 	ProviderAddress: "http://prometheus:9090",
-	// 	Query:           "custom query",
-	// })
+	metricTemplate := pdtesting.NewMetricTemplate(ctx, t, k, pdtesting.MetricTemplateInfo{
+		Name:            appName,
+		Namespace:       ns.GetName(),
+		ProviderType:    "prometheus",
+		ProviderAddress: "http://prometheus:9090",
+		Query:           "custom query",
+	})
+	defer pdtesting.Cleanup(ctx, t, k, metricTemplate)
 
 	templates, _, cerrs, err := service.ListMetricTemplates(ctx, cl, flagger.ListMetricTemplatesOptions{})
 	assert.NoError(t, err)
@@ -78,33 +83,27 @@ func TestFetcher_ListCanaryDeployments(t *testing.T) {
 
 	defer cancelFn()
 
-	cl, service, err := newService(ctx, k8sEnv)
-	assert.NoError(t, err)
-
 	k, err := client.New(k8sEnv.Rest, client.Options{
 		Scheme: kube.CreateScheme(),
 	})
 	assert.NoError(t, err)
 
-	appName := "canary"
-
+	// create namespace before creating service to
+	// prevent ns access issues
 	ns := pdtesting.NewNamespace(ctx, t, k)
 
-	fmt.Println(ns.Name)
+	cl, service, err := newService(ctx, k8sEnv)
+	assert.NoError(t, err)
 
-	// _ = pdtesting.NewDeployment(ctx, t, k, appName, ns.GetName())
+	appName := "canary"
 
-	_ = pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
+	canary := pdtesting.NewCanary(ctx, t, k, pdtesting.CanaryInfo{
 		Name:      appName,
 		Namespace: ns.Name,
 	})
+	defer pdtesting.Cleanup(ctx, t, k, &canary)
 
-	canary, err := service.GetCanary(ctx, cl, flagger.GetCanaryOptions{Name: appName, Namespace: ns.Name, ClusterName: "Default"})
-	assert.NoError(t, err)
-	fmt.Println(canary)
-
-	canaries, _, cerrs, err := service.ListCanaryDeployments(ctx, cl, flagger.ListCanaryDeploymentsOptions{Namespace: "default"})
-	fmt.Println(canaries)
+	canaries, _, cerrs, err := service.ListCanaryDeployments(ctx, cl, flagger.ListCanaryDeploymentsOptions{})
 	assert.NoError(t, err)
 	assert.Empty(t, cerrs)
 	assert.NotEmpty(t, canaries["Default"])
