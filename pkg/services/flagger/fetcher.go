@@ -104,6 +104,7 @@ func (service *defaultFetcher) ListCanaryDeployments(
 	results := map[string][]v1beta1.Canary{}
 
 	for clusterName, lists := range clist.Lists() {
+		fmt.Println(clusterName)
 		// log an error if Flagger is not available on a cluster.
 		if !service.crdService.IsAvailable(clusterName, crd.FlaggerCRDName) {
 			e := CanaryListError{
@@ -118,6 +119,7 @@ func (service *defaultFetcher) ListCanaryDeployments(
 
 		for _, l := range lists {
 			list, ok := l.(*v1beta1.CanaryList)
+			fmt.Println(list)
 			if !ok {
 				continue
 			}
@@ -235,11 +237,13 @@ func (service *defaultFetcher) ListMetricTemplates(
 		}
 
 		for _, l := range lists {
+
 			list, ok := l.(*v1beta1.MetricTemplateList)
 			if !ok {
 				continue
 			}
 
+			fmt.Println(list)
 			results[clusterName] = append(results[clusterName], list.Items...)
 		}
 	}
