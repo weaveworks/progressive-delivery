@@ -110,7 +110,7 @@ func (service *defaultFetcher) ListCanaryDeployments(
 				ClusterName: clusterName,
 				Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
 			}
-			service.logger.Error(e, "flagger unavailable on cluster")
+			service.logger.Error(e, "flagger unavailable")
 			results[clusterName] = []v1beta1.Canary{}
 
 			continue
@@ -228,7 +228,7 @@ func (service *defaultFetcher) ListMetricTemplates(
 				ClusterName: clusterName,
 				Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
 			}
-			service.logger.Error(e, "flagger unavailable on cluster")
+			service.logger.Error(e, "flagger unavailable")
 			results[clusterName] = []v1beta1.MetricTemplate{}
 
 			continue
