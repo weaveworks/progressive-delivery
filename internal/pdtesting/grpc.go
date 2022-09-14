@@ -39,11 +39,13 @@ func MakeGRPCServer(
 		return n, nil
 	}
 
-	clientsFactory := clustersmngr.NewClientFactory(
+	clientsFactory := clustersmngr.NewClustersManager(
 		fetcher,
 		&nsChecker,
 		log,
 		kube.CreateScheme(),
+		clustersmngr.NewClustersClientsPool,
+		clustersmngr.DefaultKubeConfigOptions,
 	)
 
 	_ = clientsFactory.UpdateClusters(ctx)
@@ -57,7 +59,7 @@ func MakeGRPCServer(
 
 	pdServer, _ := server.NewProgressiveDeliveryServer(opts)
 	lis := bufconn.Listen(1024 * 1024)
-	principal := &auth.UserPrincipal{}
+	principal := auth.NewUserPrincipal(auth.Token("1234"))
 	s := grpc.NewServer(
 		withClientsPoolInterceptor(clientsFactory, cfg, principal),
 	)
@@ -101,7 +103,7 @@ func RestConfigToCluster(cfg *rest.Config) clustersmngr.Cluster {
 	}
 }
 
-func withClientsPoolInterceptor(clientsFactory clustersmngr.ClientsFactory, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {
+func withClientsPoolInterceptor(clientsFactory clustersmngr.ClustersManager, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {
 	return grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		if err := clientsFactory.UpdateClusters(ctx); err != nil {
 			return nil, err

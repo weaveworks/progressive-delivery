@@ -24,7 +24,7 @@ func Hydrate(ctx context.Context, mux *runtime.ServeMux, opts ServerOpts) error 
 type pdServer struct {
 	pb.UnimplementedProgressiveDeliveryServiceServer
 
-	clientsFactory clustersmngr.ClientsFactory
+	clientsFactory clustersmngr.ClustersManager
 	version        version.Fetcher
 	crd            crd.Fetcher
 	flagger        flagger.Fetcher
@@ -32,7 +32,7 @@ type pdServer struct {
 }
 
 type ServerOpts struct {
-	ClientFactory clustersmngr.ClientsFactory
+	ClientFactory clustersmngr.ClustersManager
 	CRDService    crd.Fetcher
 	Logger        logr.Logger
 }

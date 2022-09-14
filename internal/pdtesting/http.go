@@ -34,11 +34,13 @@ func MakeHTTPServer(
 		return n, nil
 	}
 
-	clientsFactory := clustersmngr.NewClientFactory(
+	clientsFactory := clustersmngr.NewClustersManager(
 		fetcher,
 		&nsChecker,
 		log,
 		kube.CreateScheme(),
+		clustersmngr.NewClustersClientsPool,
+		clustersmngr.DefaultKubeConfigOptions,
 	)
 
 	_ = clientsFactory.UpdateClusters(ctx)

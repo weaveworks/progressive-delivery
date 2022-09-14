@@ -19,7 +19,7 @@ type Fetcher interface {
 	UpdateCRDList()
 }
 
-func NewFetcher(ctx context.Context, logger logr.Logger, clientFactory clustersmngr.ClientsFactory) Fetcher {
+func NewFetcher(ctx context.Context, logger logr.Logger, clientFactory clustersmngr.ClustersManager) Fetcher {
 	fetcher := &defaultFetcher{
 		logger:        logger,
 		clientFactory: clientFactory,
@@ -34,7 +34,7 @@ func NewFetcher(ctx context.Context, logger logr.Logger, clientFactory clustersm
 type defaultFetcher struct {
 	sync.RWMutex
 	logger        logr.Logger
-	clientFactory clustersmngr.ClientsFactory
+	clientFactory clustersmngr.ClustersManager
 	crds          map[string][]v1.CustomResourceDefinition
 }
 

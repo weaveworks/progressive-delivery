@@ -9,7 +9,7 @@ import (
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-func NewNoCacheFetcher(clientFactory clustersmngr.ClientsFactory) Fetcher {
+func NewNoCacheFetcher(clientFactory clustersmngr.ClustersManager) Fetcher {
 	fetcher := &noCacheFetcher{
 		clientFactory: clientFactory,
 		crds:          map[string][]v1.CustomResourceDefinition{},
@@ -21,7 +21,7 @@ func NewNoCacheFetcher(clientFactory clustersmngr.ClientsFactory) Fetcher {
 type noCacheFetcher struct {
 	sync.RWMutex
 	logger        logr.Logger
-	clientFactory clustersmngr.ClientsFactory
+	clientFactory clustersmngr.ClustersManager
 	crds          map[string][]v1.CustomResourceDefinition
 }
 

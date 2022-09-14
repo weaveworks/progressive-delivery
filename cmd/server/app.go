@@ -81,11 +81,13 @@ func serve(cfg *appConfig) error {
 		return n, nil
 	}
 
-	clientsFactory := clustersmngr.NewClientFactory(
+	clientsFactory := clustersmngr.NewClustersManager(
 		fetcher,
 		&nsChecker,
 		cfg.Logger,
 		kube.CreateScheme(),
+		clustersmngr.NewClustersClientsPool,
+		clustersmngr.DefaultKubeConfigOptions,
 	)
 	clientsFactory.Start(ctx)
 
@@ -142,7 +144,7 @@ func serve(cfg *appConfig) error {
 	return nil
 }
 
-func withClientsPoolInterceptor(clientsFactory clustersmngr.ClientsFactory, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {
+func withClientsPoolInterceptor(clientsFactory clustersmngr.ClustersManager, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {
 	return grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 		if err := clientsFactory.UpdateClusters(ctx); err != nil {
 			return nil, err
