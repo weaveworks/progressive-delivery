@@ -642,6 +642,8 @@ github.com/valyala/bytebufferpool v1.0.0 h1:GqA5TC/0021Y/b9FG4Oi9Mr3q7XYx6Kllzaw
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.2.1 h1:TVEnxayobAdVkhQfrfes2IzOB6o+z4roRkPF52WA1u4=
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
+github.com/weaveworks/weave-gitops v0.9.5-rc.1 h1:oNB+UJNomnwNMye1w0IUZJ6Uh4a5yGNJCiuhdjgCGSo=
+github.com/weaveworks/weave-gitops v0.9.5-rc.1/go.mod h1:kTqzOpAiuyPr4fUkoXZrjI9qRTNybGqZsIm5bDKoXH0=
 github.com/weaveworks/weave-gitops v0.9.5-rc.1.0.20220914151138-df0001ab0aa8 h1:b2SMMHv496a4XuTVrWy37bIZlzTYyjhcND4yjUlG36E=
 github.com/weaveworks/weave-gitops v0.9.5-rc.1.0.20220914151138-df0001ab0aa8/go.mod h1:kTqzOpAiuyPr4fUkoXZrjI9qRTNybGqZsIm5bDKoXH0=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
