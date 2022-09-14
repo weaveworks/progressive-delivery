@@ -28,7 +28,7 @@ func (pd *pdServer) IsFlaggerAvailable(ctx context.Context, msg *pb.IsFlaggerAva
 }
 
 func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesRequest) (*pb.ListCanariesResponse, error) {
-	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	clusterClient, err := pd.clustersManager.GetImpersonatedClient(ctx, auth.Principal(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("error getting impersonated client: %w", err)
 	}
@@ -106,7 +106,7 @@ func (pd *pdServer) ListCanaries(ctx context.Context, msg *pb.ListCanariesReques
 }
 
 func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*pb.GetCanaryResponse, error) {
-	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	clusterClient, err := pd.clustersManager.GetImpersonatedClient(ctx, auth.Principal(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("error getting impersonated client: %w", err)
 	}
@@ -166,7 +166,7 @@ func (pd *pdServer) GetCanary(ctx context.Context, msg *pb.GetCanaryRequest) (*p
 }
 
 func (pd *pdServer) ListMetricTemplates(ctx context.Context, msg *pb.ListMetricTemplatesRequest) (*pb.ListMetricTemplatesResponse, error) {
-	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	clusterClient, err := pd.clustersManager.GetImpersonatedClient(ctx, auth.Principal(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("error getting impersonated client: %w", err)
 	}

@@ -34,7 +34,7 @@ func MakeHTTPServer(
 		return n, nil
 	}
 
-	clientsFactory := clustersmngr.NewClustersManager(
+	clustersManager := clustersmngr.NewClustersManager(
 		fetcher,
 		&nsChecker,
 		log,
@@ -43,12 +43,12 @@ func MakeHTTPServer(
 		clustersmngr.DefaultKubeConfigOptions,
 	)
 
-	_ = clientsFactory.UpdateClusters(ctx)
-	_ = clientsFactory.UpdateNamespaces(ctx)
+	_ = clustersManager.UpdateClusters(ctx)
+	_ = clustersManager.UpdateNamespaces(ctx)
 
 	opts := server.ServerOpts{
-		ClientFactory: clientsFactory,
-		CRDService:    crd.NewNoCacheFetcher(clientsFactory),
+		ClustersManager: clustersManager,
+		CRDService:      crd.NewNoCacheFetcher(clustersManager),
 	}
 
 	mux := runtime.NewServeMux()

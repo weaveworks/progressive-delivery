@@ -17,7 +17,7 @@ func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, clustersmn
 	fetcher := &clustersmngrfakes.FakeClusterFetcher{}
 	fetcher.FetchReturns([]clustersmngr.Cluster{RestConfigToCluster(k8sEnv.Rest)}, nil)
 
-	clientsFactory := clustersmngr.NewClustersManager(
+	clustersManager := clustersmngr.NewClustersManager(
 		fetcher,
 		nsaccess.NewChecker(nsaccess.DefautltWegoAppRules),
 		log,
@@ -26,14 +26,14 @@ func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, clustersmn
 		clustersmngr.DefaultKubeConfigOptions,
 	)
 
-	if err := clientsFactory.UpdateClusters(ctx); err != nil {
+	if err := clustersManager.UpdateClusters(ctx); err != nil {
 		return nil, nil, err
 	}
-	if err := clientsFactory.UpdateNamespaces(ctx); err != nil {
+	if err := clustersManager.UpdateNamespaces(ctx); err != nil {
 		return nil, nil, err
 	}
 
-	client, err := clientsFactory.GetServerClient(ctx)
+	client, err := clustersManager.GetServerClient(ctx)
 
-	return client, clientsFactory, err
+	return client, clustersManager, err
 }
