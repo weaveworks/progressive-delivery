@@ -9,10 +9,10 @@ import (
 	v1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 )
 
-func NewNoCacheFetcher(clientFactory clustersmngr.ClientsFactory) Fetcher {
+func NewNoCacheFetcher(clustersManager clustersmngr.ClustersManager) Fetcher {
 	fetcher := &noCacheFetcher{
-		clientFactory: clientFactory,
-		crds:          map[string][]v1.CustomResourceDefinition{},
+		clustersManager: clustersManager,
+		crds:            map[string][]v1.CustomResourceDefinition{},
 	}
 
 	return fetcher
@@ -20,9 +20,9 @@ func NewNoCacheFetcher(clientFactory clustersmngr.ClientsFactory) Fetcher {
 
 type noCacheFetcher struct {
 	sync.RWMutex
-	logger        logr.Logger
-	clientFactory clustersmngr.ClientsFactory
-	crds          map[string][]v1.CustomResourceDefinition
+	logger          logr.Logger
+	clustersManager clustersmngr.ClustersManager
+	crds            map[string][]v1.CustomResourceDefinition
 }
 
 func (s *noCacheFetcher) UpdateCRDList() {
@@ -31,7 +31,7 @@ func (s *noCacheFetcher) UpdateCRDList() {
 
 	ctx := context.Background()
 
-	client, err := s.clientFactory.GetServerClient(ctx)
+	client, err := s.clustersManager.GetServerClient(ctx)
 	if err != nil {
 		s.logger.Error(err, "unable to get client pool")
 

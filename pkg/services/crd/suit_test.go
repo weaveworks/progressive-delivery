@@ -30,12 +30,12 @@ func TestMain(m *testing.M) {
 }
 
 func newService(ctx context.Context, k8sEnv *testutils.K8sTestEnv) (crd.Fetcher, error) {
-	_, clientFactory, err := pdtesting.CreateClient(k8sEnv)
+	_, clustersManager, err := pdtesting.CreateClient(k8sEnv)
 	if err != nil {
 		return nil, err
 	}
 
 	log := logr.Discard()
 
-	return crd.NewFetcher(ctx, log, clientFactory), nil
+	return crd.NewFetcher(ctx, log, clustersManager), nil
 }

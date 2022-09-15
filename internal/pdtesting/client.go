@@ -11,27 +11,29 @@ import (
 	"github.com/weaveworks/weave-gitops/pkg/testutils"
 )
 
-func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, clustersmngr.ClientsFactory, error) {
+func CreateClient(k8sEnv *testutils.K8sTestEnv) (clustersmngr.Client, clustersmngr.ClustersManager, error) {
 	ctx := context.Background()
 	log := logr.Discard()
 	fetcher := &clustersmngrfakes.FakeClusterFetcher{}
 	fetcher.FetchReturns([]clustersmngr.Cluster{RestConfigToCluster(k8sEnv.Rest)}, nil)
 
-	clientsFactory := clustersmngr.NewClientFactory(
+	clustersManager := clustersmngr.NewClustersManager(
 		fetcher,
 		nsaccess.NewChecker(nsaccess.DefautltWegoAppRules),
 		log,
 		kube.CreateScheme(),
+		clustersmngr.NewClustersClientsPool,
+		clustersmngr.DefaultKubeConfigOptions,
 	)
 
-	if err := clientsFactory.UpdateClusters(ctx); err != nil {
+	if err := clustersManager.UpdateClusters(ctx); err != nil {
 		return nil, nil, err
 	}
-	if err := clientsFactory.UpdateNamespaces(ctx); err != nil {
+	if err := clustersManager.UpdateNamespaces(ctx); err != nil {
 		return nil, nil, err
 	}
 
-	client, err := clientsFactory.GetServerClient(ctx)
+	client, err := clustersManager.GetServerClient(ctx)
 
-	return client, clientsFactory, err
+	return client, clustersManager, err
 }

@@ -39,27 +39,29 @@ func MakeGRPCServer(
 		return n, nil
 	}
 
-	clientsFactory := clustersmngr.NewClientFactory(
+	clustersManager := clustersmngr.NewClustersManager(
 		fetcher,
 		&nsChecker,
 		log,
 		kube.CreateScheme(),
+		clustersmngr.NewClustersClientsPool,
+		clustersmngr.DefaultKubeConfigOptions,
 	)
 
-	_ = clientsFactory.UpdateClusters(ctx)
-	_ = clientsFactory.UpdateNamespaces(ctx)
+	_ = clustersManager.UpdateClusters(ctx)
+	_ = clustersManager.UpdateNamespaces(ctx)
 
 	opts := server.ServerOpts{
-		ClientFactory: clientsFactory,
-		CRDService:    crd.NewNoCacheFetcher(clientsFactory),
-		Logger:        logr.Discard(),
+		ClustersManager: clustersManager,
+		CRDService:      crd.NewNoCacheFetcher(clustersManager),
+		Logger:          logr.Discard(),
 	}
 
 	pdServer, _ := server.NewProgressiveDeliveryServer(opts)
 	lis := bufconn.Listen(1024 * 1024)
-	principal := &auth.UserPrincipal{}
+	principal := auth.NewUserPrincipal(auth.Token("1234"))
 	s := grpc.NewServer(
-		withClientsPoolInterceptor(clientsFactory, cfg, principal),
+		withClientsPoolInterceptor(clustersManager, cfg, principal),
 	)
 
 	pb.RegisterProgressiveDeliveryServiceServer(s, pdServer)
@@ -101,20 +103,20 @@ func RestConfigToCluster(cfg *rest.Config) clustersmngr.Cluster {
 	}
 }
 
-func withClientsPoolInterceptor(clientsFactory clustersmngr.ClientsFactory, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {
+func withClientsPoolInterceptor(clustersManager clustersmngr.ClustersManager, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {
 	return grpc.UnaryInterceptor(func(ctx context.Context, req interface{}, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		if err := clientsFactory.UpdateClusters(ctx); err != nil {
+		if err := clustersManager.UpdateClusters(ctx); err != nil {
 			return nil, err
 		}
-		if err := clientsFactory.UpdateNamespaces(ctx); err != nil {
+		if err := clustersManager.UpdateNamespaces(ctx); err != nil {
 			return nil, err
 		}
 
-		clientsFactory.UpdateUserNamespaces(ctx, user)
+		clustersManager.UpdateUserNamespaces(ctx, user)
 
 		ctx = auth.WithPrincipal(ctx, user)
 
-		clusterClient, err := clientsFactory.GetImpersonatedClient(ctx, user)
+		clusterClient, err := clustersManager.GetImpersonatedClient(ctx, user)
 		if err != nil {
 			return nil, err
 		}

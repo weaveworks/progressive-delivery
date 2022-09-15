@@ -24,17 +24,17 @@ func Hydrate(ctx context.Context, mux *runtime.ServeMux, opts ServerOpts) error 
 type pdServer struct {
 	pb.UnimplementedProgressiveDeliveryServiceServer
 
-	clientsFactory clustersmngr.ClientsFactory
-	version        version.Fetcher
-	crd            crd.Fetcher
-	flagger        flagger.Fetcher
-	logger         logr.Logger
+	clustersManager clustersmngr.ClustersManager
+	version         version.Fetcher
+	crd             crd.Fetcher
+	flagger         flagger.Fetcher
+	logger          logr.Logger
 }
 
 type ServerOpts struct {
-	ClientFactory clustersmngr.ClientsFactory
-	CRDService    crd.Fetcher
-	Logger        logr.Logger
+	ClustersManager clustersmngr.ClustersManager
+	CRDService      crd.Fetcher
+	Logger          logr.Logger
 }
 
 func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServiceServer, error) {
@@ -43,17 +43,17 @@ func NewProgressiveDeliveryServer(opts ServerOpts) (pb.ProgressiveDeliveryServic
 	versionService := version.NewFetcher()
 
 	if opts.CRDService == nil {
-		opts.CRDService = crd.NewFetcher(ctx, opts.Logger, opts.ClientFactory)
+		opts.CRDService = crd.NewFetcher(ctx, opts.Logger, opts.ClustersManager)
 	}
 
 	flaggerService := flagger.NewFetcher(opts.CRDService, opts.Logger)
 
 	return &pdServer{
-		clientsFactory: opts.ClientFactory,
-		version:        versionService,
-		crd:            opts.CRDService,
-		flagger:        flaggerService,
-		logger:         opts.Logger,
+		clustersManager: opts.ClustersManager,
+		version:         versionService,
+		crd:             opts.CRDService,
+		flagger:         flaggerService,
+		logger:          opts.Logger,
 	}, nil
 }
 

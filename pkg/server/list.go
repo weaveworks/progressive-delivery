@@ -12,7 +12,7 @@ import (
 )
 
 func (pd *pdServer) ListCanaryObjects(ctx context.Context, msg *pb.ListCanaryObjectsRequest) (*pb.ListCanaryObjectsResponse, error) {
-	clusterClient, err := pd.clientsFactory.GetImpersonatedClient(ctx, auth.Principal(ctx))
+	clusterClient, err := pd.clustersManager.GetImpersonatedClient(ctx, auth.Principal(ctx))
 	if err != nil {
 		return nil, fmt.Errorf("error getting impersonating client: %w", err)
 	}
