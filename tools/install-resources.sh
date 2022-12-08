@@ -32,11 +32,40 @@ tool() {
   echo "${tools_bin}/${name}"
 }
 
+wait_for_crd() {
+  name=${1}
+  max_retry=${2:-10}
+
+  counter=1
+  while [ ${counter} -le ${max_retry} ]; do
+    echo "> [${counter}/${max_retry}] waiting for ${name}"
+
+    kubectl get crd "${name}" >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+      echo "> ${name} is ready"
+      return
+    fi
+
+
+    counter=$(( counter + 1 ))
+    sleep 1
+  done
+
+  echo "!!! ${name} is not available after ${max_retry} retries"
+
+  exit 1
+}
+
+
 install_istio() {
   echo "Install Istio"
 
   kubectl apply -f "$(git_root)/tools/extra-resources/ns/"
   kubectl apply -f "$(git_root)/tools/extra-resources/istio/"
+
+  wait_for_crd "gateways.networking.istio.io"
+
+  kubectl apply -f "$(git_root)/tools/extra-resources/istio/resources/"
 }
 
 install_flagger() {
@@ -44,10 +73,13 @@ install_flagger() {
 
   kubectl apply -f "$(git_root)/tools/extra-resources/ns/"
   kubectl apply -f "$(git_root)/tools/extra-resources/flagger/"
+
 }
 
 install_canaries() {
   echo "Install Canaries"
+
+  wait_for_crd "canaries.flagger.app"
 
   kubectl apply -f "$(git_root)/tools/extra-resources/ns/"
   kubectl apply -f "$(git_root)/tools/extra-resources/canary/"
