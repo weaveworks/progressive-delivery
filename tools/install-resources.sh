@@ -2,14 +2,17 @@
 
 usage(){
   cat << EOF
-usage: $0 [-i] [-f] [-c]
+usage: $0 [-i] [-f] [-c] [-p]
 
 Install extra resources.
 
 OPTIONS:
+   -p|--prometheus   Install Prometheus
    -c|--canaries     Install Canary objects
    -f|--flagger      Install Flagger
    -i|--istio        Install Istio
+      --all          Install all
+      --uninstall    Uninstall instead of install
    -h|--help         Show this message
 EOF
 }
@@ -18,31 +21,36 @@ git_root() {
   git rev-parse --show-toplevel
 }
 
-tools_bin="$(git_root)/tools/bin"
+log() {
+  message="${1}"
 
-tool() {
-  name=${1}
-
-  if [ ! -f "${tools_bin}/${name}" ]; then
-    echo "'${name}' is not available; use 'make dependencies'" >&2
-
-    exit 1
-  fi
-
-  echo "${tools_bin}/${name}"
+  echo "  >>> ${message}"
 }
 
-wait_for_crd() {
-  name=${1}
-  max_retry=${2:-10}
+install_ns() {
+  name="${1}"
+
+  kubectl get ns "${name}" >/dev/null 2>&1 \
+    || kubectl apply -f "$(git_root)/tools/extra-resources/ns/${name}.yaml"
+}
+
+wait_for_resource() {
+  kind=${1}
+  name=${2}
+  ns=${3}
+  max_retry=${4:-10}
 
   counter=1
   while [ ${counter} -le ${max_retry} ]; do
-    echo "> [${counter}/${max_retry}] waiting for ${name}"
+    log "> [${counter}/${max_retry}] waiting for ${name}"
 
-    kubectl get crd "${name}" >/dev/null 2>&1
+    if [[ "${ns}" == "" ]]; then
+      kubectl get "${kind}" "${name}" >/dev/null 2>&1
+    else
+      kubectl get "${kind}" --namespace="${ns}" "${name}" >/dev/null 2>&1
+    fi
     if [ $? -eq 0 ]; then
-      echo "> ${name} is ready"
+      log "> ${name} is ready"
       return
     fi
 
@@ -51,44 +59,93 @@ wait_for_crd() {
     sleep 1
   done
 
-  echo "!!! ${name} is not available after ${max_retry} retries"
+  log "!!! ${name} is not available after ${max_retry} retries" >&2
 
   exit 1
 }
 
+install_prometheus() {
+  log "Install Prometheus"
+
+  kubectl apply -f "$(git_root)/tools/extra-resources/prometheus/"
+  kubectl -n istio-system rollout status deployment/prometheus
+}
 
 install_istio() {
-  echo "Install Istio"
+  log "Install Istio"
 
-  kubectl apply -f "$(git_root)/tools/extra-resources/ns/"
+  install_ns "istio-system"
+  install_ns "istio-ingress"
+
   kubectl apply -f "$(git_root)/tools/extra-resources/istio/"
 
-  wait_for_crd "gateways.networking.istio.io"
+  wait_for_resource "crd" "gateways.networking.istio.io"
+  wait_for_resource "service" "istiod" "istio-system"
 
   kubectl apply -f "$(git_root)/tools/extra-resources/istio/resources/"
 }
 
 install_flagger() {
-  echo "Install Flagger"
+  log "Install Flagger"
 
-  kubectl apply -f "$(git_root)/tools/extra-resources/ns/"
+  install_ns "flagger"
   kubectl apply -f "$(git_root)/tools/extra-resources/flagger/"
 
 }
 
 install_canaries() {
-  echo "Install Canaries"
+  log "Install Canaries"
 
-  wait_for_crd "canaries.flagger.app"
+  wait_for_resource "crd" "canaries.flagger.app"
 
-  kubectl apply -f "$(git_root)/tools/extra-resources/ns/"
+  install_ns "canary"
   kubectl apply -f "$(git_root)/tools/extra-resources/canary/"
 }
 
+uninstall_ns() {
+  name="${1}"
 
-INSTALL_ISTIO=0
-INSTALL_FLAGGER=0
-INSTALL_CANARIES=0
+  kubectl get ns "${name}" >/dev/null 2>&1 \
+    && kubectl delete -f "$(git_root)/tools/extra-resources/ns/${name}.yaml"
+}
+
+uninstall_prometheus() {
+  log "Uninstall Prometheus"
+
+  kubectl delete -f "$(git_root)/tools/extra-resources/prometheus/" 2>/dev/null
+}
+
+uninstall_istio() {
+  log "Uninstall Istio"
+
+  kubectl delete -f "$(git_root)/tools/extra-resources/istio/resources/" 2>/dev/null
+  kubectl delete -f "$(git_root)/tools/extra-resources/istio/" 2>/dev/null
+
+  uninstall_ns "istio-ingress"
+  uninstall_ns "istio-system"
+}
+
+uninstall_flagger() {
+  log "Uninstall Flagger"
+
+  kubectl apply -f "$(git_root)/tools/extra-resources/flagger/" 2>/dev/null
+  uninstall_ns "flagger"
+}
+
+uninstall_canaries() {
+  log "Uninstall Canaries"
+
+  kubectl delete -f "$(git_root)/tools/extra-resources/canary/"  2>/dev/null
+  uninstall_ns "canary"
+}
+
+
+
+ISTIO=0
+FLAGGER=0
+CANARIES=0
+PROMETHEUS=0
+UNINSTALL=0
 while [ ! $# -eq 0 ]; do
   case "${1}" in
     -h | --help)
@@ -96,13 +153,25 @@ while [ ! $# -eq 0 ]; do
       exit
       ;;
     -f | --flagger)
-      INSTALL_FLAGGER=1
+      FLAGGER=1
       ;;
     -i | --istio)
-      INSTALL_ISTIO=1
+      ISTIO=1
       ;;
     -c | --canaries)
-      INSTALL_CANARIES=1
+      CANARIES=1
+      ;;
+    -p | --prometheus)
+      PROMETHEUS=1
+      ;;
+    --all)
+      ISTIO=1
+      FLAGGER=1
+      CANARIES=1
+      PROMETHEUS=1
+      ;;
+    --uninstall)
+      UNINSTALL=1
       ;;
     *)
       usage
@@ -114,6 +183,14 @@ done
 
 # They are called here and not inside the 'case' above, becasue if more than one
 # defined, the order is important.
-if [ $INSTALL_ISTIO -eq 1 ]; then install_istio; fi
-if [ $INSTALL_FLAGGER -eq 1 ]; then install_flagger; fi
-if [ $INSTALL_CANARIES -eq 1 ]; then install_canaries; fi
+if [ $UNINSTALL -ne 0 ]; then
+  if [ $CANARIES -eq 1 ]; then uninstall_canaries; fi
+  if [ $FLAGGER -eq 1 ]; then uninstall_flagger; fi
+  if [ $PROMETHEUS -eq 1 ]; then uninstall_prometheus; fi
+  if [ $ISTIO -eq 1 ]; then uninstall_istio; fi
+else
+  if [ $ISTIO -eq 1 ]; then install_istio; fi
+  if [ $PROMETHEUS -eq 1 ]; then install_prometheus; fi
+  if [ $FLAGGER -eq 1 ]; then install_flagger; fi
+  if [ $CANARIES -eq 1 ]; then install_canaries; fi
+fi
