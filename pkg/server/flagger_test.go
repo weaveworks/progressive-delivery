@@ -411,7 +411,7 @@ func newAutoScaler(ctx context.Context, t *testing.T, k client.Client, name stri
 					Type: "Resource",
 					Resource: &hpav2.ResourceMetricSource{
 						Name:                     "cpu",
-						TargetAverageUtilization: pointer.Int32Ptr(99),
+						TargetAverageUtilization: pointer.Int32(99),
 					},
 				},
 			},
