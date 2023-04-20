@@ -1,6 +1,6 @@
 module github.com/weaveworks/progressive-delivery
 
-go 1.18
+go 1.20
 
 require (
 	github.com/bufbuild/buf v1.4.0

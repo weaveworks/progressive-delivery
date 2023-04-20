@@ -3,7 +3,7 @@ package server_test
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -32,7 +32,7 @@ func TestHydrate(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, res.StatusCode, "should have been ok")
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
 	v := pb.GetVersionResponse{}
