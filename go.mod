@@ -16,7 +16,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.8.1
-	github.com/weaveworks/weave-gitops v0.9.6
+	github.com/weaveworks/weave-gitops v0.10.0
 	google.golang.org/genproto v0.0.0-20220715211116-798f69b842b9
 	google.golang.org/grpc v1.49.0
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
