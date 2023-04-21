@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	flaggerv1 "github.com/fluxcd/flagger/pkg/apis/flagger/v1beta1"
 	"github.com/go-logr/logr"
 	"github.com/hashicorp/go-multierror"
@@ -21,13 +20,13 @@ import (
 )
 
 type Fetcher interface {
-	DeploymentStrategyFor(canary v1beta1.Canary) DeploymentStrategy
-	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
-	FetchPromoted(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *v1beta1.Canary) (v1.Deployment, error)
-	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*v1beta1.Canary, error)
-	GetMetricTemplate(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, name, namespace string) (v1beta1.MetricTemplate, error)
-	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]v1beta1.Canary, string, []CanaryListError, error)
-	ListMetricTemplates(ctx context.Context, clusterClient clustersmngr.Client, options ListMetricTemplatesOptions) (map[string][]v1beta1.MetricTemplate, string, []MetricTemplateListError, error)
+	DeploymentStrategyFor(canary flaggerv1.Canary) DeploymentStrategy
+	FetchTargetRef(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *flaggerv1.Canary) (v1.Deployment, error)
+	FetchPromoted(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, canary *flaggerv1.Canary) (v1.Deployment, error)
+	GetCanary(ctx context.Context, client clustersmngr.Client, opts GetCanaryOptions) (*flaggerv1.Canary, error)
+	GetMetricTemplate(ctx context.Context, clusterName string, clusterClient clustersmngr.Client, name, namespace string) (flaggerv1.MetricTemplate, error)
+	ListCanaryDeployments(ctx context.Context, client clustersmngr.Client, opts ListCanaryDeploymentsOptions) (map[string][]flaggerv1.Canary, string, []CanaryListError, error)
+	ListMetricTemplates(ctx context.Context, clusterClient clustersmngr.Client, options ListMetricTemplatesOptions) (map[string][]flaggerv1.MetricTemplate, string, []MetricTemplateListError, error)
 	ListCanaryObjects(ctx context.Context, clusterClient clustersmngr.Client, opts ListCanaryObjectsOptions) ([]unstructured.Unstructured, error)
 }
 
@@ -70,11 +69,11 @@ func (service *defaultFetcher) ListCanaryDeployments(
 	ctx context.Context,
 	clusterClient clustersmngr.Client,
 	options ListCanaryDeploymentsOptions,
-) (map[string][]v1beta1.Canary, string, []CanaryListError, error) {
+) (map[string][]flaggerv1.Canary, string, []CanaryListError, error) {
 	var respErrors []CanaryListError
 
 	clist := clustersmngr.NewClusteredList(func() client.ObjectList {
-		return &v1beta1.CanaryList{}
+		return &flaggerv1.CanaryList{}
 	})
 
 	opts := []client.ListOption{}
@@ -101,7 +100,7 @@ func (service *defaultFetcher) ListCanaryDeployments(
 		}
 	}
 
-	results := map[string][]v1beta1.Canary{}
+	results := map[string][]flaggerv1.Canary{}
 
 	for clusterName, lists := range clist.Lists() {
 		// log an error if Flagger is not available on a cluster.
@@ -111,13 +110,13 @@ func (service *defaultFetcher) ListCanaryDeployments(
 				Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
 			}
 			service.logger.Error(e, "flagger unavailable")
-			results[clusterName] = []v1beta1.Canary{}
+			results[clusterName] = []flaggerv1.Canary{}
 
 			continue
 		}
 
 		for _, l := range lists {
-			list, ok := l.(*v1beta1.CanaryList)
+			list, ok := l.(*flaggerv1.CanaryList)
 			if !ok {
 				continue
 			}
@@ -133,8 +132,8 @@ func (service *defaultFetcher) GetCanary(
 	ctx context.Context,
 	clustersClient clustersmngr.Client,
 	opts GetCanaryOptions,
-) (*v1beta1.Canary, error) {
-	k := &v1beta1.Canary{}
+) (*flaggerv1.Canary, error) {
+	k := &flaggerv1.Canary{}
 	key := client.ObjectKey{
 		Name:      opts.Name,
 		Namespace: opts.Namespace,
@@ -152,8 +151,8 @@ func (service *defaultFetcher) GetMetricTemplate(
 	clusterName string,
 	clusterClient clustersmngr.Client,
 	name, namespace string,
-) (v1beta1.MetricTemplate, error) {
-	object := v1beta1.MetricTemplate{}
+) (flaggerv1.MetricTemplate, error) {
+	object := flaggerv1.MetricTemplate{}
 
 	key := client.ObjectKey{
 		Name:      name,
@@ -169,7 +168,7 @@ func (service *defaultFetcher) FetchTargetRef(
 	ctx context.Context,
 	clusterName string,
 	clusterClient clustersmngr.Client,
-	canary *v1beta1.Canary,
+	canary *flaggerv1.Canary,
 ) (v1.Deployment, error) {
 	return getDeployment(ctx, clusterName, clusterClient, canary.Spec.TargetRef.Name, canary.GetNamespace())
 }
@@ -178,7 +177,7 @@ func (service *defaultFetcher) FetchPromoted(
 	ctx context.Context,
 	clusterName string,
 	clusterClient clustersmngr.Client,
-	canary *v1beta1.Canary,
+	canary *flaggerv1.Canary,
 ) (v1.Deployment, error) {
 	name := fmt.Sprintf("%s-primary", canary.Spec.TargetRef.Name)
 	return getDeployment(ctx, clusterName, clusterClient, name, canary.GetNamespace())
@@ -188,11 +187,11 @@ func (service *defaultFetcher) ListMetricTemplates(
 	ctx context.Context,
 	clusterClient clustersmngr.Client,
 	options ListMetricTemplatesOptions,
-) (map[string][]v1beta1.MetricTemplate, string, []MetricTemplateListError, error) {
+) (map[string][]flaggerv1.MetricTemplate, string, []MetricTemplateListError, error) {
 	var respErrors []MetricTemplateListError
 
 	clist := clustersmngr.NewClusteredList(func() client.ObjectList {
-		return &v1beta1.MetricTemplateList{}
+		return &flaggerv1.MetricTemplateList{}
 	})
 
 	opts := []client.ListOption{}
@@ -219,7 +218,7 @@ func (service *defaultFetcher) ListMetricTemplates(
 		}
 	}
 
-	results := map[string][]v1beta1.MetricTemplate{}
+	results := map[string][]flaggerv1.MetricTemplate{}
 
 	for clusterName, lists := range clist.Lists() {
 		// log an error if Flagger is not available on a cluster.
@@ -229,14 +228,14 @@ func (service *defaultFetcher) ListMetricTemplates(
 				Err:         FlaggerIsNotAvailableError{ClusterName: clusterName},
 			}
 			service.logger.Error(e, "flagger unavailable")
-			results[clusterName] = []v1beta1.MetricTemplate{}
+			results[clusterName] = []flaggerv1.MetricTemplate{}
 
 			continue
 		}
 
 		for _, l := range lists {
 
-			list, ok := l.(*v1beta1.MetricTemplateList)
+			list, ok := l.(*flaggerv1.MetricTemplateList)
 			if !ok {
 				continue
 			}
@@ -284,10 +283,15 @@ func (service *defaultFetcher) ListCanaryObjects(ctx context.Context, clusterCli
 	}
 
 	if canary.Spec.AutoscalerRef != nil {
+		autoScaler := &flaggerv1.LocalObjectReference{
+			APIVersion: canary.Spec.AutoscalerRef.APIVersion,
+			Kind:       canary.Spec.AutoscalerRef.Kind,
+			Name:       canary.Spec.AutoscalerRef.Name,
+		}
 		hpa, err := getRef(
 			ctx,
 			clusterClient,
-			canary.Spec.AutoscalerRef,
+			autoScaler,
 			canary.GetNamespace(),
 			opts.ClusterName,
 		)
@@ -368,7 +372,7 @@ func getDeployment(ctx context.Context, clusterName string, c clustersmngr.Clien
 	return deployment, err
 }
 
-func getRef(ctx context.Context, clusterClient clustersmngr.Client, ref *v1beta1.LocalObjectReference, ns string, clusterName string) (unstructured.Unstructured, error) {
+func getRef(ctx context.Context, clusterClient clustersmngr.Client, ref *flaggerv1.LocalObjectReference, ns string, clusterName string) (unstructured.Unstructured, error) {
 	object := unstructured.Unstructured{}
 	key := client.ObjectKey{
 		Name:      ref.Name,

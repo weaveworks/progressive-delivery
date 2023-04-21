@@ -11,7 +11,8 @@ import (
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
-	"github.com/weaveworks/weave-gitops/core/clustersmngr/clustersmngrfakes"
+	"github.com/weaveworks/weave-gitops/core/clustersmngr/cluster"
+	"github.com/weaveworks/weave-gitops/core/clustersmngr/fetcher"
 	"github.com/weaveworks/weave-gitops/core/nsaccess/nsaccessfakes"
 	"github.com/weaveworks/weave-gitops/pkg/server/auth"
 	"github.com/weaveworks/weave-gitops/pkg/testutils"
@@ -19,6 +20,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/test/bufconn"
 	v1 "k8s.io/api/core/v1"
+	v1a "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/rest"
 )
 
@@ -30,23 +32,20 @@ func MakeGRPCServer(
 	log := logr.Discard()
 	ctx := context.Background()
 
-	fetcher := &clustersmngrfakes.FakeClusterFetcher{}
-	fetcher.FetchReturns([]clustersmngr.Cluster{RestConfigToCluster(k8sEnv.Rest)}, nil)
+	cl, err := RestConfigToCluster(k8sEnv.Rest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fetcher := fetcher.NewSingleClusterFetcher(cl)
 
 	nsChecker := nsaccessfakes.FakeChecker{}
-	nsChecker.FilterAccessibleNamespacesStub = func(ctx context.Context, c *rest.Config, n []v1.Namespace) ([]v1.Namespace, error) {
+	nsChecker.FilterAccessibleNamespacesStub = func(ctx context.Context, _ v1a.AuthorizationV1Interface, n []v1.Namespace) ([]v1.Namespace, error) {
 		// Pretend the user has access to everything
 		return n, nil
 	}
 
-	clustersManager := clustersmngr.NewClustersManager(
-		fetcher,
-		&nsChecker,
-		log,
-		kube.CreateScheme(),
-		clustersmngr.NewClustersClientsPool,
-		clustersmngr.DefaultKubeConfigOptions,
-	)
+	clustersManager := clustersmngr.NewClustersManager([]clustersmngr.ClusterFetcher{fetcher}, &nsChecker, log)
 
 	_ = clustersManager.UpdateClusters(ctx)
 	_ = clustersManager.UpdateNamespaces(ctx)
@@ -94,13 +93,13 @@ func MakeGRPCServer(
 	return pb.NewProgressiveDeliveryServiceClient(conn)
 }
 
-func RestConfigToCluster(cfg *rest.Config) clustersmngr.Cluster {
-	return clustersmngr.Cluster{
-		Name:        "Default",
-		Server:      cfg.Host,
-		BearerToken: cfg.BearerToken,
-		TLSConfig:   cfg.TLSClientConfig,
-	}
+func RestConfigToCluster(cfg *rest.Config) (cluster.Cluster, error) {
+	return cluster.NewSingleCluster(
+		cluster.DefaultCluster,
+		cfg,
+		kube.CreateScheme(),
+		cluster.DefaultKubeConfigOptions...,
+	)
 }
 
 func withClientsPoolInterceptor(clustersManager clustersmngr.ClustersManager, config *rest.Config, user *auth.UserPrincipal) grpc.ServerOption {

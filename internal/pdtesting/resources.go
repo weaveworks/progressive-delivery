@@ -58,7 +58,7 @@ func NewCanary(
 				Name:       info.Name,
 			},
 			SkipAnalysis: false,
-			AutoscalerRef: &v1beta1.LocalObjectReference{
+			AutoscalerRef: &v1beta1.AutoscalerRefernce{
 				APIVersion: "autoscaling/v2beta1",
 				Kind:       "HorizontalPodAutoscaler",
 				Name:       info.Name,

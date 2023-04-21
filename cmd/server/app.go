@@ -19,6 +19,7 @@ import (
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
+	"github.com/weaveworks/weave-gitops/core/clustersmngr/cluster"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr/fetcher"
 	"github.com/weaveworks/weave-gitops/core/logger"
 	"github.com/weaveworks/weave-gitops/core/nsaccess/nsaccessfakes"
@@ -26,6 +27,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	v1 "k8s.io/api/core/v1"
+	v1a "k8s.io/client-go/kubernetes/typed/authorization/v1"
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
@@ -73,22 +75,22 @@ func serve(cfg *appConfig) error {
 		return fmt.Errorf("could not create client config: %w", err)
 	}
 
-	fetcher := fetcher.NewSingleClusterFetcher(restCfg)
+	scheme := kube.CreateScheme()
+
+	cl, err := cluster.NewSingleCluster(cluster.DefaultCluster, restCfg, scheme, cluster.DefaultKubeConfigOptions...)
+	if err != nil {
+		return fmt.Errorf("unable to create single cluster: %w", err)
+	}
+
+	fetcher := fetcher.NewSingleClusterFetcher(cl)
 
 	nsChecker := nsaccessfakes.FakeChecker{}
-	nsChecker.FilterAccessibleNamespacesStub = func(ctx context.Context, c *rest.Config, n []v1.Namespace) ([]v1.Namespace, error) {
+	nsChecker.FilterAccessibleNamespacesStub = func(ctx context.Context, _ v1a.AuthorizationV1Interface, n []v1.Namespace) ([]v1.Namespace, error) {
 		// Pretend the user has access to everything
 		return n, nil
 	}
 
-	clustersManager := clustersmngr.NewClustersManager(
-		fetcher,
-		&nsChecker,
-		cfg.Logger,
-		kube.CreateScheme(),
-		clustersmngr.NewClustersClientsPool,
-		clustersmngr.DefaultKubeConfigOptions,
-	)
+	clustersManager := clustersmngr.NewClustersManager([]clustersmngr.ClusterFetcher{fetcher}, &nsChecker, cfg.Logger)
 	clustersManager.Start(ctx)
 
 	_ = clustersManager.UpdateClusters(ctx)
