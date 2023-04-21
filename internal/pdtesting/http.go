@@ -7,15 +7,14 @@ import (
 
 	"github.com/go-logr/logr"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"github.com/weaveworks/progressive-delivery/pkg/kube"
 	"github.com/weaveworks/progressive-delivery/pkg/server"
 	"github.com/weaveworks/progressive-delivery/pkg/services/crd"
 	"github.com/weaveworks/weave-gitops/core/clustersmngr"
-	"github.com/weaveworks/weave-gitops/core/clustersmngr/clustersmngrfakes"
+	"github.com/weaveworks/weave-gitops/core/clustersmngr/fetcher"
 	"github.com/weaveworks/weave-gitops/core/nsaccess/nsaccessfakes"
 	"github.com/weaveworks/weave-gitops/pkg/testutils"
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/rest"
+	v1a "k8s.io/client-go/kubernetes/typed/authorization/v1"
 )
 
 func MakeHTTPServer(
@@ -25,23 +24,20 @@ func MakeHTTPServer(
 	log := logr.Discard()
 	ctx := context.Background()
 
-	fetcher := &clustersmngrfakes.FakeClusterFetcher{}
-	fetcher.FetchReturns([]clustersmngr.Cluster{RestConfigToCluster(k8sEnv.Rest)}, nil)
+	cl, err := RestConfigToCluster(k8sEnv.Rest)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fetcher := fetcher.NewSingleClusterFetcher(cl)
 
 	nsChecker := nsaccessfakes.FakeChecker{}
-	nsChecker.FilterAccessibleNamespacesStub = func(ctx context.Context, c *rest.Config, n []v1.Namespace) ([]v1.Namespace, error) {
+	nsChecker.FilterAccessibleNamespacesStub = func(ctx context.Context, _ v1a.AuthorizationV1Interface, n []v1.Namespace) ([]v1.Namespace, error) {
 		// Pretend the user has access to everything
 		return n, nil
 	}
 
-	clustersManager := clustersmngr.NewClustersManager(
-		fetcher,
-		&nsChecker,
-		log,
-		kube.CreateScheme(),
-		clustersmngr.NewClustersClientsPool,
-		clustersmngr.DefaultKubeConfigOptions,
-	)
+	clustersManager := clustersmngr.NewClustersManager([]clustersmngr.ClusterFetcher{fetcher}, &nsChecker, log)
 
 	_ = clustersManager.UpdateClusters(ctx)
 	_ = clustersManager.UpdateNamespaces(ctx)
@@ -53,8 +49,7 @@ func MakeHTTPServer(
 
 	mux := runtime.NewServeMux()
 
-	err := server.Hydrate(ctx, mux, opts)
-	if err != nil {
+	if err := server.Hydrate(ctx, mux, opts); err != nil {
 		t.Error(err)
 	}
 
